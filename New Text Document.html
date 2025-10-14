@@ -1,0 +1,748 @@
+<!DOCTYPE html>
+<html lang="ar" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>مولد المطويات الصحية - كلية الطب جامعة بني سويف</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Enhanced PDF Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@300;400;600;700;900&family=Tajawal:wght@300;400;500;700;900&family=Amiri:wght@400;700&family=Readex+Pro:wght@400;600;700&family=Roboto:wght@400;700&family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <!-- Font Awesome Icons -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Cairo', 'Tajawal', 'Readex Pro', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            direction: rtl;
+        }
+        
+        /* Enhanced Background */
+        body::before {
+            content: '';
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: radial-gradient(circle at 20% 50%, rgba(120, 119, 198, 0.3), transparent 50%),
+                        radial-gradient(circle at 80% 80%, rgba(255, 119, 198, 0.3), transparent 50%),
+                        radial-gradient(circle at 40% 20%, rgba(255, 219, 98, 0.2), transparent 50%);
+            z-index: -1;
+        }
+        
+        /* Base Leaflet Styles */
+        .leaflet-container {
+            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+            position: relative;
+            overflow: hidden;
+            transition: background 0.5s ease, color 0.5s ease;
+        }
+        .leaflet-content-wrapper {
+            position: relative;
+            z-index: 1;
+        }
+        .leaflet-section {
+            padding: 1.5rem;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            transition: border-color 0.5s ease;
+        }
+        .leaflet-content h3 {
+            transition: color 0.5s ease, border-color 0.5s ease;
+        }
+        .leaflet-content h4 {
+            transition: color 0.5s ease;
+        }
+        
+        /* --- THEME DEFINITIONS --- */
+
+        /* Theme 1: Default Professional Blue */
+        .theme-1 .leaflet-container { background-color: #ffffff; }
+        .theme-1 .leaflet-container::before { content: ''; position: absolute; top: -50px; left: -50px; width: 200px; height: 200px; background: #e0f2fe; opacity: 0.5; transform: rotate(45deg); z-index: 0; border-radius: 30px; }
+        .theme-1 .leaflet-container::after { content: ''; position: absolute; bottom: -80px; right: -80px; width: 250px; height: 250px; background: #f0fdf4; opacity: 0.6; transform: rotate(-30deg); z-index: 0; border-radius: 40px; }
+        .theme-1 .leaflet-section:not(:last-child) { border-right: 2px dashed #dbeafe; }
+        .theme-1 .leaflet-content h3 { font-weight: 700; font-size: 1.1rem; color: #0c4a6e; margin-bottom: 0.75rem; padding-bottom: 0.25rem; border-bottom: 2px solid #38bdf8; }
+        .theme-1 .leaflet-content h4 { font-weight: 600; font-size: 1rem; color: #075985; margin-top: 1rem; margin-bottom: 0.5rem; }
+
+        /* Theme 2: Warm & Friendly */
+        .theme-2 .leaflet-container { background-color: #fffbeb; }
+        .theme-2 .leaflet-section:not(:last-child) { border-right: 2px dashed #fef3c7; }
+        .theme-2 .leaflet-content h3 { color: #b45309; border-bottom-color: #f59e0b; }
+        .theme-2 .leaflet-content h4 { color: #d97706; }
+
+        /* Theme 3: Clinical Minimalist */
+        .theme-3 .leaflet-container { background-color: #f9fafb; }
+        .theme-3 .leaflet-section:not(:last-child) { border-right: 1px solid #e5e7eb; }
+        .theme-3 .leaflet-content h3 { font-family: 'Montserrat', sans-serif; color: #111827; border-bottom-color: #6b7280; }
+        .theme-3 .leaflet-content h4 { font-family: 'Montserrat', sans-serif; color: #374151; }
+
+        /* Theme 4: Natural & Organic */
+        .theme-4 .leaflet-container { background-color: #f0fdf4; }
+        .theme-4 .leaflet-section:not(:last-child) { border-right: 2px dashed #bbf7d0; }
+        .theme-4 .leaflet-content h3 { font-family: 'Lora', serif; color: #14532d; border-bottom-color: #22c55e; }
+        .theme-4 .leaflet-content h4 { font-family: 'Lora', serif; color: #166534; }
+
+        /* Theme 5: Modern Dark */
+        .theme-5 .leaflet-container { background-color: #1f2937; color: #d1d5db; }
+        .theme-5 .leaflet-section:not(:last-child) { border-right: 2px dashed #4b5563; }
+        .theme-5 .leaflet-content h3 { color: #60a5fa; border-bottom-color: #60a5fa; }
+        .theme-5 .leaflet-content h4 { color: #93c5fd; }
+        .theme-5 .leaflet-content p, .theme-5 .leaflet-content ul { color: #d1d5db; }
+        .theme-5 .leaflet-container .bg-gray-50 { background-color: #374151 !important; }
+        .theme-5 .leaflet-container .text-gray-700 { color: #f9fafb !important; }
+        .theme-5 .leaflet-container .text-gray-600 { color: #d1d5db !important; }
+
+
+        /* Theme 6: Playful & Bright */
+        .theme-6 .leaflet-container { background-color: #eff6ff; }
+        .theme-6 .leaflet-section:not(:last-child) { border-right: 2px dotted #f87171; }
+        .theme-6 .leaflet-content h3 { color: #dc2626; border-bottom-color: #facc15; }
+        .theme-6 .leaflet-content h4 { color: #ea580c; }
+        
+        /* Theme 7: Corporate & Bold */
+        .theme-7 .leaflet-container { background-color: #ffffff; }
+        .theme-7 .leaflet-section:not(:last-child) { border-right: 2px solid #1e3a8a; }
+        .theme-7 .leaflet-content h3 { font-family: 'Roboto', sans-serif; text-transform: uppercase; color: #1e3a8a; border-bottom-color: #93c5fd; }
+        .theme-7 .leaflet-content h4 { font-family: 'Roboto', sans-serif; color: #1d4ed8; }
+        
+        /* Theme 8: Soft & Caring */
+        .theme-8 .leaflet-container { background: linear-gradient(135deg, #fce7f3, #f3e8ff); }
+        .theme-8 .leaflet-section:not(:last-child) { border-right: 2px dashed #fbcfe8; }
+        .theme-8 .leaflet-content h3 { color: #9d174d; border-bottom-color: #e879f9; }
+        .theme-8 .leaflet-content h4 { color: #c026d3; }
+
+        /* Theme 9: Scientific Grid */
+        .theme-9 .leaflet-container { background-color: #ffffff; background-image: linear-gradient(#e2e8f0 1px, transparent 1px), linear-gradient(to right, #e2e8f0 1px, transparent 1px); background-size: 20px 20px; }
+        .theme-9 .leaflet-section:not(:last-child) { border-right: 1px solid #94a3b8; }
+        .theme-9 .leaflet-content h3 { font-family: 'monospace'; color: #0f172a; border-bottom-color: #0f172a; }
+        .theme-9 .leaflet-content h4 { font-family: 'monospace'; color: #334155; }
+        
+        /* Theme 10: Vintage Paper */
+        .theme-10 .leaflet-container { background-color: #fdf6e3; }
+        .theme-10 .leaflet-section:not(:last-child) { border-right: 2px dashed #d4cba6; }
+        .theme-10 .leaflet-content h3 { font-family: 'Lora', serif; color: #583922; border-bottom-color: #a16207; }
+        .theme-10 .leaflet-content h4 { font-family: 'Lora', serif; color: #84542f; }
+        
+        /* Theme 11: Ocean Deep */
+        .theme-11 .leaflet-container { background-color: #ecfeff; }
+        .theme-11 .leaflet-section:not(:last-child) { border-right: 2px dotted #67e8f9; }
+        .theme-11 .leaflet-content h3 { color: #155e75; border-bottom-color: #06b6d4; }
+        .theme-11 .leaflet-content h4 { color: #0e7490; }
+        
+        /* Theme 12: Minty Fresh */
+        .theme-12 .leaflet-container { background: #f0fdfa; }
+        .theme-12 .leaflet-section:not(:last-child) { border-right: 2px dashed #a7f3d0; }
+        .theme-12 .leaflet-content h3 { color: #047857; border-bottom-color: #34d399; }
+        .theme-12 .leaflet-content h4 { color: #059669; }
+
+        /* Theme 13: Lavender Calm */
+        .theme-13 .leaflet-container { background-color: #f5f3ff; }
+        .theme-13 .leaflet-section:not(:last-child) { border-right: 2px dashed #ddd6fe; }
+        .theme-13 .leaflet-content h3 { color: #5b21b6; border-bottom-color: #a78bfa; }
+        .theme-13 .leaflet-content h4 { color: #6d28d9; }
+        
+        /* Theme 14: Slate Professional */
+        .theme-14 .leaflet-container { background-color: #f8fafc; }
+        .theme-14 .leaflet-section:not(:last-child) { border-right: 1px solid #cbd5e1; }
+        .theme-14 .leaflet-content h3 { color: #334155; border-bottom-color: #64748b; }
+        .theme-14 .leaflet-content h4 { color: #475569; }
+
+        /* Theme 15: Cherry Blossom */
+        .theme-15 .leaflet-container { background-color: #fff1f2; }
+        .theme-15 .leaflet-section:not(:last-child) { border-right: 2px dashed #ffcdd2; }
+        .theme-15 .leaflet-content h3 { color: #be123c; border-bottom-color: #f43f5e; }
+        .theme-15 .leaflet-content h4 { color: #e11d48; }
+
+        /* Theme 16: Forest Green */
+        .theme-16 .leaflet-container { background: #f0fff4; }
+        .theme-16 .leaflet-section:not(:last-child) { border-right: 2px solid #abdec1; }
+        .theme-16 .leaflet-content h3 { color: #004d40; border-bottom-color: #38a169; }
+        .theme-16 .leaflet-content h4 { color: #00695c; }
+        
+        /* Theme 17: Royal Purple */
+        .theme-17 .leaflet-container { background: #faf5ff; }
+        .theme-17 .leaflet-section:not(:last-child) { border-right: 2px dashed #e9d5ff; }
+        .theme-17 .leaflet-content h3 { color: #581c87; border-bottom-color: #9333ea; }
+        .theme-17 .leaflet-content h4 { color: #6b21a8; }
+        
+        /* Theme 18: Sunny Day */
+        .theme-18 .leaflet-container { background: linear-gradient(to top, #fffde7, #ffffff); }
+        .theme-18 .leaflet-section:not(:last-child) { border-right: 2px dashed #fff9c4; }
+        .theme-18 .leaflet-content h3 { color: #f57f17; border-bottom-color: #ffca28; }
+        .theme-18 .leaflet-content h4 { color: #f9a825; }
+        
+        /* Theme 19: Monochrome */
+        .theme-19 .leaflet-container { background: #ffffff; }
+        .theme-19 .leaflet-section:not(:last-child) { border-right: 2px dashed #cccccc; }
+        .theme-19 .leaflet-content h3 { color: #000000; border-bottom-color: #333333; }
+        .theme-19 .leaflet-content h4 { color: #555555; }
+        
+        /* Theme 20: Blueprint */
+        .theme-20 .leaflet-container { background: #0a2f5a; color: #ffffff; }
+        .theme-20 .leaflet-section:not(:last-child) { border-right: 2px dashed #3a6a9f; }
+        .theme-20 .leaflet-content h3 { color: #ffffff; border-bottom-color: #ffffff; }
+        .theme-20 .leaflet-content h4 { color: #eeeeee; }
+        .theme-20 .leaflet-content p, .theme-20 .leaflet-content ul { color: #dddddd; }
+        .theme-20 .leaflet-container .bg-gray-50 { background-color: #0d3b6e !important; }
+        .theme-20 .leaflet-container .text-gray-700, .theme-20 .leaflet-container .text-gray-600, .theme-20 .leaflet-container .text-sky-800 { color: #ffffff !important; }
+
+
+        @media print {
+            @page { size: A4 landscape; margin: 0.5cm; }
+            body, html { width: 100%; height: 100%; background-color: #ffffff !important; }
+            body, body * { background-color: #ffffff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
+            body * { visibility: hidden; }
+            #leafletOutput, #leafletOutput * { visibility: visible; }
+            #leafletOutput { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
+            .leaflet-container { width: 28.7cm; height: 19cm; box-shadow: none; border: 1px solid #ccc; margin: 0; padding: 0; }
+             .grid.leaflet-content { height: calc(100% - 120px); }
+             .leaflet-container::before, .leaflet-container::after { display: none; }
+            #controls, #header-title, #footer-note, #print-controls, #ai-tools-container, #theme-selector-container { display: none; }
+        }
+
+        /* Enhanced Loader */
+        .loader { 
+            border: 5px solid rgba(14, 165, 233, 0.1); 
+            border-top: 5px solid #0ea5e9; 
+            border-radius: 50%; 
+            width: 50px; 
+            height: 50px; 
+            animation: spin 1s linear infinite;
+            box-shadow: 0 0 20px rgba(14, 165, 233, 0.3);
+        }
+        .loader-sm { 
+            border: 2px solid rgba(14, 165, 233, 0.1); 
+            border-top: 2px solid #0ea5e9; 
+            width: 20px; 
+            height: 20px; 
+        }
+        @keyframes spin { 
+            0% { transform: rotate(0deg); } 
+            100% { transform: rotate(360deg); } 
+        }
+        
+        /* Progress Bar */
+        .progress-bar {
+            width: 100%;
+            height: 6px;
+            background: #e5e7eb;
+            border-radius: 3px;
+            overflow: hidden;
+            margin: 20px 0;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #0ea5e9, #06b6d4);
+            border-radius: 3px;
+            transition: width 0.3s ease;
+            width: 0%;
+        }
+        .placeholder { background-color: #f8fafc; border: 2px dashed #e2e8f0; display: flex; flex-direction:column; align-items: center; justify-content: center; min-height: 200px; border-radius: 0.5rem; }
+        /* Enhanced Modal */
+        .modal-overlay { 
+            position: fixed; 
+            top: 0; 
+            left: 0; 
+            right: 0; 
+            bottom: 0; 
+            background-color: rgba(0, 0, 0, 0.6); 
+            backdrop-filter: blur(5px);
+            display: flex; 
+            align-items: center; 
+            justify-content: center; 
+            z-index: 1000;
+            animation: fadeIn 0.3s ease;
+        }
+        
+        .modal-content { 
+            background: linear-gradient(135deg, #ffffff 0%, #f9fafb 100%);
+            padding: 2rem; 
+            border-radius: 20px; 
+            width: 90%; 
+            max-width: 600px; 
+            max-height: 80vh; 
+            overflow-y: auto;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+            animation: slideUp 0.3s ease;
+        }
+        
+        @keyframes fadeIn {
+            from { opacity: 0; }
+            to { opacity: 1; }
+        }
+        
+        @keyframes slideUp {
+            from { 
+                transform: translateY(50px);
+                opacity: 0;
+            }
+            to { 
+                transform: translateY(0);
+                opacity: 1;
+            }
+        }
+        .spinner-sm { width: 1rem; height: 1rem; border-width: 2px; animation: spin .5s linear infinite; }
+        .theme-preview { width: 40px; height: 40px; border-radius: 0.5rem; cursor: pointer; border: 2px solid transparent; transition: all 0.2s ease; }
+        .theme-preview:hover, .theme-preview.active { border-color: #0ea5e9; transform: scale(1.1); }
+    </style>
+</head>
+<body>
+
+    <div class="container mx-auto p-4 md:p-8">
+        
+        <header id="header-title" class="text-center mb-8">
+             <div class="glass-card p-6 max-w-4xl mx-auto">
+                <div class="flex justify-center items-center gap-3">
+                <div id="header-icon-container" class="w-10 h-10 flex items-center justify-center"></div>
+                    <i class="fas fa-heartbeat text-4xl text-pink-500"></i>
+                    <h1 class="text-3xl md:text-4xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">نشاط الرعاية الصحية الأولية</h1>
+                    <i class="fas fa-stethoscope text-4xl text-blue-500"></i>
+                </div>
+                <p class="text-lg text-gray-600 mt-2">مولد المطويات لطلاب السنة الثالثة</p>
+                <p class="text-sm text-gray-500 mt-1">كلية الطب - جامعة بني سويف الأهلية</p>
+            </div>
+        </header>
+
+        <main id="controls" class="glass-card p-8 max-w-2xl mx-auto mb-8">
+            <div class="mb-6">
+                <div class="progress-bar">
+                    <div class="progress-fill" id="progressBar"></div>
+                </div>
+                <label for="serialNumber" class="block text-lg font-semibold mb-2 text-gray-700">
+                    <i class="fas fa-id-card ml-2"></i>
+                    أدخل رقمك التسلسلي:
+                </label>
+                <input type="number" id="serialNumber" placeholder="مثال: 145" class="w-full px-4 py-3 border-2 border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500 focus:border-transparent text-lg transition-all duration-300 hover:border-sky-400" min="1" max="644">
+            </div>
+            <button id="generateButton" class="w-full bg-gradient-to-r from-sky-600 to-blue-600 text-white font-bold py-3 px-4 rounded-lg hover:from-sky-700 hover:to-blue-700 transition-all duration-300 flex items-center justify-center disabled:opacity-50 shadow-lg hover:shadow-xl transform hover:-translate-y-1">
+                <i class="fas fa-magic ml-2"></i>
+                <span id="button-text">إنشاء المطوية</span>
+                <svg id="button-spinner" class="animate-spin ml-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8_0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                </svg>
+            </button>
+            <div id="error-message" class="text-red-500 mt-4 text-center font-semibold"></div>
+        </main>
+        
+        <div id="leafletOutput" class="hidden"></div>
+
+        <div id="theme-selector-container" class="glass-card p-6 max-w-7xl mx-auto mt-8 hidden">
+             <h2 class="text-2xl font-bold text-center text-sky-800 mb-4">
+                <i class="fas fa-palette ml-2"></i>
+                اختر تصميم المطوية
+            </h2>
+             <div id="theme-selector" class="grid grid-cols-5 sm:grid-cols-10 gap-4 justify-center"></div>
+        </div>
+
+        <div id="print-controls" class="text-center mt-6 hidden">
+             <button id="regenerateContentBtn" class="bg-gradient-to-r from-gray-600 to-gray-700 text-white font-bold py-2 px-6 rounded-lg hover:from-gray-700 hover:to-gray-800 transition-all duration-300 ml-2 shadow-md hover:shadow-lg">
+                <i class="fas fa-sync-alt ml-2"></i>
+                تحديث المحتوى
+            </button>
+             <button id="regenerateImageBtn" class="bg-gradient-to-r from-purple-600 to-purple-700 text-white font-bold py-2 px-6 rounded-lg hover:from-purple-700 hover:to-purple-800 transition-all duration-300 ml-2 shadow-md hover:shadow-lg">
+                <i class="fas fa-image ml-2"></i>
+                تحديث الصورة
+            </button>
+             <button onclick="window.print()" class="bg-gradient-to-r from-sky-600 to-blue-600 text-white font-bold py-2 px-6 rounded-lg hover:from-sky-700 hover:to-blue-700 transition-all duration-300 ml-2 shadow-md hover:shadow-lg">
+                <i class="fas fa-print ml-2"></i>
+                طباعة
+            </button>
+             <button id="downloadPdfBtn" class="bg-gradient-to-r from-green-600 to-emerald-600 text-white font-bold py-2 px-6 rounded-lg hover:from-green-700 hover:to-emerald-700 transition-all duration-300 shadow-md hover:shadow-lg">
+                <i class="fas fa-file-pdf ml-2"></i>
+                تحميل PDF
+            </button>
+        </div>
+
+        <div id="ai-tools-container" class="glass-card p-6 max-w-7xl mx-auto mt-8 hidden">
+             <div class="flex justify-center items-center gap-3 text-sky-600 mb-4">
+                <div id="ai-tools-icon-container" class="w-8 h-8 flex items-center justify-center"></div>
+                 <h2 class="text-2xl font-bold text-center text-sky-800">
+                    <i class="fas fa-robot ml-2"></i>
+                    أدوات الذكاء الاصطناعي
+                </h2>
+            </div>
+            <div class="flex flex-wrap justify-center gap-4">
+                 <button id="simplifyContentBtn" class="bg-gradient-to-r from-teal-600 to-cyan-600 text-white font-bold py-2 px-6 rounded-lg hover:from-teal-700 hover:to-cyan-700 transition-all duration-300 shadow-md hover:shadow-lg">
+                    <i class="fas fa-compress-alt ml-2"></i>
+                    تبسيط المحتوى
+                </button>
+                 <button id="generatePointsBtn" class="bg-gradient-to-r from-indigo-600 to-purple-600 text-white font-bold py-2 px-6 rounded-lg hover:from-indigo-700 hover:to-purple-700 transition-all duration-300 shadow-md hover:shadow-lg">
+                    <i class="fas fa-list-ul ml-2"></i>
+                    النقاط الرئيسية
+                </button>
+                 <button id="listenBtn" class="bg-gradient-to-r from-pink-600 to-rose-600 text-white font-bold py-2 px-6 rounded-lg hover:from-pink-700 hover:to-rose-700 transition-all duration-300 shadow-md hover:shadow-lg flex items-center justify-center">
+                    <i class="fas fa-volume-up ml-2"></i>
+                    <span id="listen-btn-text">الاستماع للمطوية</span>
+                    <div id="listen-spinner" class="ml-2 border-t-transparent border-solid rounded-full border-white spinner-sm hidden"></div>
+                 </button>
+            </div>
+        </div>
+        
+        <footer id="footer-note" class="text-center text-sm text-gray-500 mt-12">
+            <p class="flex items-center justify-center gap-2 text-white">
+                <i class="fas fa-heart text-red-400"></i>
+                <span>تم التصميم لجامعة بني سويف الأهلية - كلية الطب</span>
+            </p>
+            <p class="text-white opacity-75">ملاحظة: المحتوى العلمي هو نموذج ويجب مراجعته والتحقق منه</p>
+        </footer>
+    </div>
+    
+    <div id="ai-modal" class="modal-overlay hidden">
+        <div class="modal-content">
+            <div class="flex justify-between items-center mb-4">
+                <h3 id="modal-title" class="text-xl font-bold text-gray-800">نتيجة المساعد الذكي</h3>
+                <button id="close-modal-btn" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
+            </div>
+            <div id="modal-body" class="text-gray-700"></div>
+        </div>
+    </div>
+
+
+    <script>
+        // --- DATA SECTION ---
+        let currentTopic = null;
+        let currentLeafletContent = "";
+        let audioPlayer = new Audio();
+        
+        const students = [ { serial: 1, name: "ابتسام أحمد محمود علي", seatNo: "233001" }, { serial: 2, name: "احمد سالم ابراهيم محمد سالم", seatNo: "220038" }, { serial: 3, name: "احمد صابر عشري عبد المولى", seatNo: "223006" }, { serial: 4, name: "احمد طارق محمد عبد الوهاب", seatNo: "223007" }, { serial: 5, name: "احمد محسن احمد عبد الرحمن", seatNo: "223010" }, { serial: 6, name: "احمد مروان احمد الانورى", seatNo: "223012" }, { serial: 7, name: "اسامه شعیب مصطفى انس", seatNo: "223014" }, { serial: 8, name: "استيفن ماجد معوض حزقيال", seatNo: "220105" }, { serial: 9, name: "اسراء احمد مختار محمد حسين", seatNo: "223015" }, { serial: 10, name: "اسلام محمد حسين عبد العزيز", seatNo: "223019" }, { serial: 11, name: "البراء بسيوني عبد القادر عجلان", seatNo: "223023" }, { serial: 12, name: "إبرام السيد عبد اللطيف السيد احمد", seatNo: "223024" }, { serial: 13, name: "إبرام الشيماء محمد عبد الفتاح محمد", seatNo: "230099" }, { serial: 14, name: "إبراهيم امانی حسین صالح محمد", seatNo: "220144" }, { serial: 15, name: "إبراهيم امیر احمد فتحى عبد الحسيب", seatNo: "223027" }, { serial: 16, name: "اميره سعد منصور بدر", seatNo: "223028" }, { serial: 17, name: "انتصار سمير محمد عبد العال", seatNo: "230108" }, { serial: 18, name: "ايه احمد روبي عبد الرحمن", seatNo: "223031" }, { serial: 19, name: "أمير إسحاق سعد غالي", seatNo: "230002" }, { serial: 20, name: "يوسف فؤاد غالي", seatNo: "230003" }, { serial: 21, name: "أحمد علي أحمد", seatNo: "230004" }, { serial: 22, name: "عمار أنور توفيق", seatNo: "233002" }, { serial: 23, name: "إسراء إبراهيم عبد العليم مصطفى", seatNo: "233018" }, { serial: 24, name: "إسراء أحمد حسانين أحمد", seatNo: "233019" }, { serial: 25, name: "إسراء أحمد عواض سيد", seatNo: "230084" }, { serial: 26, name: "إسراء أحمد مصطفى عبد المقصود", seatNo: "230085" }, { serial: 27, name: "إسراء حامد عبد الرازق محمد", seatNo: "230086" }, { serial: 28, name: "إسراء رمضان أحمد السيد", seatNo: "230087" }, { serial: 29, name: "إسراء صابر جمعة بكري", seatNo: "230088" }, { serial: 30, name: "إسراء عبد القوى شحاتة سليمان", seatNo: "230089" }, { serial: 31, name: "إسلام عبد الوهاب رجب عبد الوهاب", seatNo: "230091" }, { serial: 32, name: "إياد أحمد حمدي حجازي", seatNo: "230112" }, { serial: 33, name: "إيمان جمال أحمد محمود", seatNo: "230113" }, { serial: 34, name: "إيمان جمال زغلول عبد الحفيظ مرسي", seatNo: "230114" }, { serial: 35, name: "إيمان جمال عبد المنعم سيف", seatNo: "233028" }, { serial: 36, name: "إيمان حسن عيد طه", seatNo: "230115" }, { serial: 37, name: "إيمان عبد الباقي هاشم عبد الباقي", seatNo: "230116" }, { serial: 38, name: "إيمان مجدي إبراهيم وهبة", seatNo: "230117" }, { serial: 39, name: "إيمان محمد نادي عبد العليم", seatNo: "230119" }, { serial: 40, name: "إيمان ياسر محمد أبو سكينة", seatNo: "233030" }, { serial: 41, name: "أبانوب صالح فهيم إبراهيم", seatNo: "220001" }, { serial: 42, name: "أبرار سامح محمد سلامة", seatNo: "230001" }, { serial: 43, name: "احلام سعيد سمير حسين", seatNo: "233003" }, { serial: 44, name: "أحمد إبراهيم السيد إبراهيم", seatNo: "230005" }, { serial: 45, name: "أحمد إيهاب الدين كامل محمد عبد الواحد", seatNo: "230010" }, { serial: 46, name: "أحمد أسامة أحمد فؤاد عبد الرحمن", seatNo: "230006" }, { serial: 47, name: "أحمد أسامة طه عبد الرحيم", seatNo: "230007" }, { serial: 48, name: "أحمد أشرف كامل محمد", seatNo: "220015" }, { serial: 49, name: "أحمد أيمن محمد معوض", seatNo: "230009" }, { serial: 50, name: "أحمد باهى رفاعي مرسي", seatNo: "230011" }, { serial: 51, name: "أحمد بهاء الدين عبد العظيم عبد الوهاب", seatNo: "230012" }, { serial: 52, name: "أحمد جهاد طلبة الدربالي", seatNo: "230014" }, { serial: 53, name: "أحمد حجاج فضل عبد الوهاب", seatNo: "233004" }, { serial: 54, name: "أحمد حسام الدين مصطفى أحمد محمد", seatNo: "230015" }, { serial: 55, name: "أحمد حسام علي إمام", seatNo: "220024" }, { serial: 56, name: "أحمد حمدي محمد عبد المنعم", seatNo: "230017" }, { serial: 57, name: "أحمد رجب عبد الله صالحين", seatNo: "230020" }, { serial: 58, name: "أحمد رمضان بكر عبد الغفار", seatNo: "230022" }, { serial: 59, name: "أحمد سعد رجب محمد", seatNo: "230023" }, { serial: 60, name: "أحمد سلامة عبد الوهاب على عبد الوهاب", seatNo: "233006" }, { serial: 61, name: "أحمد شحاتة سليمان عبد الله", seatNo: "230025" }, { serial: 62, name: "أحمد شريف سيد عبد الرحمن", seatNo: "230026" }, { serial: 63, name: "أحمد صبحي محمد البنياوي", seatNo: "230028" }, { serial: 64, name: "أحمد صفوت احمد زبان", seatNo: "230029" }, { serial: 65, name: "أحمد عادل ربيع عبد الحميد", seatNo: "233009" }, { serial: 66, name: "أحمد عادل مصطفى علي", seatNo: "230030" }, { serial: 67, name: "أحمد عبد التواب رمضان سيد", seatNo: "230031" }, { serial: 68, name: "أحمد عبد العزيز محمد عبد العزيز", seatNo: "220175" }, { serial: 69, name: "أحمد عبد العليم محمد عباس", seatNo: "230032" }, { serial: 70, name: "أحمد عبد الله عبد العزيز علي سالم", seatNo: "230033" }, { serial: 71, name: "أحمد عبد الناصر فرج الله محمود", seatNo: "233010" }, { serial: 72, name: "أحمد عزت عطية أحمد عبد العال", seatNo: "230035" }, { serial: 73, name: "أحمد عشري محمد رمضان", seatNo: "230036" }, { serial: 74, name: "أحمد عصمت منصور كمالي", seatNo: "230597" }, { serial: 75, name: "أحمد علاء حسن محمد", seatNo: "230037" }, { serial: 76, name: "أحمد علي حسين جاد الحق", seatNo: "230038" }, { serial: 77, name: "أحمد علي عبد الفتاح أحمد", seatNo: "230039" }, { serial: 78, name: "أحمد علي محمد حسن", seatNo: "233011" }, { serial: 79, name: "أحمد عماد أمين طه", seatNo: "230040" }, { serial: 80, name: "أحمد عماد محمد عبد الوهاب", seatNo: "230041" }, { serial: 81, name: "أحمد كامل السيد أحمد عبد العزيز", seatNo: "220067" }, { serial: 82, name: "أحمد مجدي خليل محمد", seatNo: "220069" }, { serial: 83, name: "أحمد مجدي عبد الهادي عبد اللطيف", seatNo: "230044" }, { serial: 84, name: "أحمد محسن محمود أمين", seatNo: "230045" }, { serial: 85, name: "أحمد محمد السيد عبد العظيم", seatNo: "230047" }, { serial: 86, name: "محمد أحمد على أحمد", seatNo: "230046" }, { serial: 87, name: "محمد عبد الجواد عبد الفتاح", seatNo: "230049" }, { serial: 88, name: "محمدعربي محمد احمد", seatNo: "233147" }, { serial: 89, name: "محمد علي جودة أحمد", seatNo: "233012" }, { serial: 90, name: "الزمزميمحمد محمد أحمد", seatNo: "230050" }, { serial: 91, name: "أحمد محمد محمد جودة", seatNo: "230051" }, { serial: 92, name: "أحمد محمود أحمد سيد إبراهيم", seatNo: "230053" }, { serial: 93, name: "أحمد محمود شحاتة أحمد", seatNo: "230054" }, { serial: 94, name: "احمد محمود عبد الرحيم عبد الحكيم", seatNo: "230055" }, { serial: 95, name: "أحمد محمود فتحي محمود", seatNo: "230056" }, { serial: 96, name: "أحمد محمود محمد عبد التواب", seatNo: "230057" }, { serial: 97, name: "أحمد محمود محمد محمود عبد المحسن", seatNo: "230058" }, { serial: 98, name: "أحمد مدحت بديع علي", seatNo: "230059" }, { serial: 99, name: "احمد مسلم قرني محمد", seatNo: "230060" }, { serial: 100, name: "أحمد مصطفى محمد حسن", seatNo: "230062" }, { serial: 101, name: "أحمد مصطفى محمود عرفة", seatNo: "230063" }, { serial: 102, name: "أحمد ناجح عبد القادر ذكي", seatNo: "230064" }, { serial: 103, name: "أحمد نبيل حسن مرسي", seatNo: "230065" }, { serial: 104, name: "أحمد هشام محمد حسين", seatNo: "230066" }, { serial: 105, name: "أحمد ياسين خيري ياسين", seatNo: "230067" }, { serial: 106, name: "أحمد يحيى رمضان عبد الوهاب", seatNo: "230068" }, { serial: 107, name: "أحمد يسري أحمد عبد العظيم", seatNo: "230069" }, { serial: 108, name: "أدهم عمر عبد الفتاح إمام", seatNo: "230071" }, { serial: 109, name: "أروى أحمد فاروق عبد العليم إسماعيل", seatNo: "230075" }, { serial: 110, name: "أروى علاء عبد الوهاب علي", seatNo: "230076" }, { serial: 111, name: "أروى محمد نصر عبد الحميد نصر", seatNo: "230077" }, { serial: 112, name: "أروى محمود عبد الدايم عبد الفتاح", seatNo: "230078" }, { serial: 113, name: "أسامة إكرامي محمد أحمد", seatNo: "230079" }, { serial: 114, name: "أسامة محمد أحمد عبد اللطيف", seatNo: "230081" }, { serial: 115, name: "أسامة محمد موسى جمعة", seatNo: "230082" }, { serial: 116, name: "أسامة محمود عبد اللاه إسماعيل", seatNo: "230083" }, { serial: 117, name: "أسماء أمير الملوم جمعة", seatNo: "233021" }, { serial: 118, name: "أسماء سداد عبد السلام مهني", seatNo: "233022" }, { serial: 119, name: "أسماء صلاح علي عبد الباقي", seatNo: "230093" }, { serial: 120, name: "أماني محمد سعد أمين", seatNo: "233025" }, { serial: 121, name: "أمنية أشرف أيوب فرج", seatNo: "220145" }, { serial: 122, name: "أمنية مصطفى علي عبد الجيد", seatNo: "230101" }, { serial: 123, name: "أمنية معوض رمضان معوض", seatNo: "230102" }, { serial: 124, name: "أمنية وليد جابر صادق", seatNo: "230103" }, { serial: 125, name: "أميرة حاتم حسني محمد", seatNo: "230104" }, { serial: 126, name: "أميرة سيد محمود عبد الحكيم", seatNo: "230105" }, { serial: 127, name: "أميرة علاء حسن طه", seatNo: "230106" }, { serial: 128, name: "أميرة محمد محمد عبد الفتاح", seatNo: "233026" }, { serial: 129, name: "أميرة محمود عثمان عثمان", seatNo: "230107" }, { serial: 130, name: "أنس خليل عمار همام", seatNo: "230109" }, { serial: 131, name: "أنس عيسى عبد الدايم محمود", seatNo: "230110" }, { serial: 132, name: "أنطون ظريف ثابت عبده", seatNo: "220178" }, { serial: 133, name: "أيمن رجب قرني محمد", seatNo: "233031" }, { serial: 134, name: "أيمن محمد رمضان حافظ بدوي", seatNo: "230120" }, { serial: 135, name: "آلاء عامر عبد الفتاح عبد الفتاح", seatNo: "230094" }, { serial: 136, name: "آلاء عماد يوسف محمد", seatNo: "230095" }, { serial: 137, name: "آلاء عمر صديق أحمد", seatNo: "233024" }, { serial: 138, name: "آلاء محمد رمضان عبد الواحد", seatNo: "230096" }, { serial: 139, name: "آلاء محمد عثمان محمد", seatNo: "230097" }, { serial: 140, name: "آلاء ناصر تمام محمد", seatNo: "230098" }, { serial: 141, name: "آیات حمدي سيد محمد", seatNo: "230111" }, { serial: 142, name: "آية خليل جمعة محمود الشاهد", seatNo: "230121" }, { serial: 143, name: "آية خميس علي خميس", seatNo: "230122" }, { serial: 144, name: "آية رمضان عبد الفتاح عبد العزيز", seatNo: "230123" }, { serial: 145, name: "آية سمير أحمد طه", seatNo: "230124" }, { serial: 146, name: "آية عبد الناصر محمد علي", seatNo: "230125" }, { serial: 147, name: "آية عزت إبراهيم عبد الحليم", seatNo: "233032" }, { serial: 148, name: "آية عماد كمال عبد العزيز", seatNo: "230126" }, { serial: 149, name: "آية محمد أبو كلوة محمود", seatNo: "230127" }, { serial: 150, name: "آية محمد عبد الرحمن محمد", seatNo: "220167" }, { serial: 151, name: "آية مصطفى عبد الفتاح صاوي خليل", seatNo: "230128" }, { serial: 152, name: "باسم خالد حسين أبو الغيط", seatNo: "230129" }, { serial: 153, name: "باسم محمد سعيد حسان", seatNo: "230130" }, { serial: 154, name: "بدر عاطف عويس عيد", seatNo: "233033" }, { serial: 155, name: "بسملة أمين عبد الله محمود", seatNo: "230131" }, { serial: 156, name: "بسملة ربيع جودة عبد اللطيف", seatNo: "230132" }, { serial: 157, name: "بسملة مجدى سيد إبراهيم منصور", seatNo: "230133" }, { serial: 158, name: "بسملة محمد كامل محمد علي", seatNo: "230134" }, { serial: 159, name: "بسنت محمد عبد المنعم عرفة", seatNo: "230135" }, { serial: 160, name: "بيتر عاطف فرج ابواليمين", seatNo: "233034" }, { serial: 161, name: "بيشوي عاطف جميل وهيب", seatNo: "230137" }, { serial: 162, name: "تسنيم عبد الرؤوف عيد مصطفى", seatNo: "230138" }, { serial: 163, name: "تسنيم محمد عبد المجيد عبد الموجود", seatNo: "233036" }, { serial: 164, name: "تسنيم محمد عبد الفتاح محمد", seatNo: "223033" }, { serial: 165, name: "تغريد عبد الله عبد السلام مراد", seatNo: "230139" }, { serial: 166, name: "تقى جمال السعيد حسن", seatNo: "233037" }, { serial: 167, name: "جاسمين يسري السيد يونس", seatNo: "230140" }, { serial: 168, name: "جاكوب جرجس شاكر عجايبي", seatNo: "230141" }, { serial: 169, name: "جنة محمود فاروق حسين", seatNo: "230142" }, { serial: 170, name: "جنى تامر أبو بكر صلاح الدين", seatNo: "230143" }, { serial: 171, name: "جنى حسام محفوظ طه", seatNo: "230144" }, { serial: 172, name: "جهاد احمد معوض منصور", seatNo: "223035" }, { serial: 173, name: "جودة سلامة جودة نظير", seatNo: "230147" }, { serial: 174, name: "جورج جوزيف اسكندر ملاك", seatNo: "220207" }, { serial: 175, name: "حازم جبر محمد أحمد", seatNo: "230148" }, { serial: 176, name: "حازم سعید رمضان سید", seatNo: "230149" }, { serial: 177, name: "حازم محمد لملوم محمود", seatNo: "230150" }, { serial: 178, name: "حبيبة الرحمن مجدي عبد النبي محمد", seatNo: "230151" }, { serial: 179, name: "حبيبة ناجح محمد أحمد محمد", seatNo: "233041" }, { serial: 180, name: "حسام الدين محمود محمد أحمد", seatNo: "230153" }, { serial: 181, name: "حسام أشرف محمد أحمد", seatNo: "230152" }, { serial: 182, name: "حسام رمضان محمد حسن", seatNo: "230154" }, { serial: 183, name: "حسام عبد اللطيف رضا عبد اللطيف", seatNo: "230155" }, { serial: 184, name: "حسان هاني عباس مصطفى", seatNo: "230156" }, { serial: 185, name: "حسن خالد عبد الفتاح حسن", seatNo: "233043" }, { serial: 186, name: "حسن محمد حسن عبد المجيد", seatNo: "233044" }, { serial: 187, name: "حسناء محمد روبي مرسي", seatNo: "223036" }, { serial: 188, name: "حسنية أيمن عبد الفتاح غانم", seatNo: "230158" }, { serial: 189, name: "حسين توفيق حسين توفيق", seatNo: "230159" }, { serial: 190, name: "حلمي محمد حلمي عبد الفتاح", seatNo: "233046" }, { serial: 191, name: "حماده احمد عبد الرحيم محمد", seatNo: "223037" }, { serial: 192, name: "حمدي محمد حمدي السعدني", seatNo: "233047" }, { serial: 193, name: "حمزة أحمد فكري عبد الحميد", seatNo: "230160" }, { serial: 194, name: "حنين أحمد حسن مصطفى علي", seatNo: "230161" }, { serial: 195, name: "خالد الوليد خليفة قاطش", seatNo: "230163" }, { serial: 196, name: "خالد إبراهيم رمضان محمد", seatNo: "230162" }, { serial: 197, name: "خالد إمام جمل إمام", seatNo: "230164" }, { serial: 198, name: "خالد رمضان عطية عبد العزيز", seatNo: "220230" }, { serial: 199, name: "خالد سيد حسن محمد علي", seatNo: "220231" }, { serial: 200, name: "خالد عادل سید محمد", seatNo: "233048" }, { serial: 201, name: "خالد علاء عبد الستار عبد العليم", seatNo: "233049" }, { serial: 202, name: "خالد علي عبد الظاهر علي", seatNo: "230165" }, { serial: 203, name: "خلود فايز خلف إمبابي", seatNo: "230166" }, { serial: 204, name: "خلود محمد عبد الباسط عبد الهادي", seatNo: "233052" }, { serial: 205, name: "دارين حسن عبد المنعم مرسي", seatNo: "230167" }, { serial: 206, name: "دينا سيد محمود أمين", seatNo: "230170" }, { serial: 207, name: "ذياد أحمد محمد حلمي", seatNo: "230171" }, { serial: 208, name: "ذياد ممدوح هيبة سيد", seatNo: "230173" }, { serial: 209, name: "رامز أحمد محمد قناوي", seatNo: "230174" }, { serial: 210, name: "رحاب سيد سعد عويس", seatNo: "230175" }, { serial: 211, name: "رحمة يحي حسين محمد", seatNo: "230177" }, { serial: 212, name: "رضوی محمد فاروق محمد", seatNo: "233054" }, { serial: 213, name: "رغدة مدحت سيد سليمان", seatNo: "230179" }, { serial: 214, name: "رفيدة محمد رفعت فرج", seatNo: "230181" }, { serial: 215, name: "رنا خير الله أحمد عبد العظيم", seatNo: "230182" }, { serial: 216, name: "رنا محمد علي دكروري", seatNo: "230184" }, { serial: 217, name: "رنا مصطفى محي الدين علي", seatNo: "230185" }, { serial: 218, name: "رهف محمد عبد الرشيد أحمد", seatNo: "230186" }, { serial: 219, name: "روان إبراهيم محمد إبراهيم", seatNo: "230187" }, { serial: 220, name: "روان أحمد صلاح أحمد", seatNo: "230188" }, { serial: 221, name: "روان سليمان محمود احمد", seatNo: "230189" }, { serial: 222, name: "روان ماهر عبد الرسول مصطفى", seatNo: "230190" }, { serial: 223, name: "روان محمد فتحي سيد", seatNo: "230191" }, { serial: 224, name: "روان محمود محمد محمد", seatNo: "230192" }, { serial: 225, name: "روضة جمال سيد محمد", seatNo: "230193" }, { serial: 226, name: "روضة حمدي سالم محمد", seatNo: "230194" }, { serial: 227, name: "روفيدة أحمد عبد العظيم محمد", seatNo: "230195" }, { serial: 228, name: "رؤى أحمد ياسر أحمد حسانين", seatNo: "230196" }, { serial: 229, name: "روی خالد محمد عبد اللاه", seatNo: "230598" }, { serial: 230, name: "رؤى علاء الدين عبد الرحيم واسم", seatNo: "230197" }, { serial: 231, name: "ريتاج أحمد السيد أحمد", seatNo: "230600" }, { serial: 232, name: "ريماس محمد أبو طالب حسن", seatNo: "230198" }, { serial: 233, name: "ريمون مشيل فتحي صالح", seatNo: "230199" }, { serial: 234, name: "رينا هاني علي عبد القوي راضي", seatNo: "230200" }, { serial: 235, name: "ريهام عادل محمد ابرهيم", seatNo: "230201" }, { serial: 236, name: "ريهام محمد حامد إبراهيم", seatNo: "230202" }, { serial: 237, name: "زياد السيد رجب رمضان", seatNo: "230203" }, { serial: 238, name: "زياد حسن أحمد محمد الطيب", seatNo: "230204" }, { serial: 239, name: "زياد حسن دياب عبد القادر", seatNo: "230205" }, { serial: 240, name: "زياد حمدي محمود عبد التواب", seatNo: "230172" }, { serial: 241, name: "زياد رمضان أحمد علي", seatNo: "220277" }, { serial: 242, name: "زياد سامي فاروق عبد المطلب", seatNo: "230206" }, { serial: 243, name: "زياد مجدي حسين أبو الغيط", seatNo: "230207" }, { serial: 244, name: "زياد محمد أحمد محمد", seatNo: "230208" }, { serial: 245, name: "زياد محمد حسن أحمد", seatNo: "233058" }, { serial: 246, name: "زياد محمد معروف محمد", seatNo: "230209" }, { serial: 247, name: "زياد محمود حنفي محمود", seatNo: "233059" }, { serial: 248, name: "زياد محمود محمد سالم", seatNo: "230210" }, { serial: 249, name: "زياد محمود محمد محمد", seatNo: "230211" }, { serial: 250, name: "زينب محمد أحمد محمد", seatNo: "230212" }, { serial: 251, name: "سارا السيد عبد الظاهر محمود", seatNo: "230213" }, { serial: 252, name: "سارة أحمد على إمام أبو القمصان", seatNo: "230214" }, { serial: 253, name: "سارة بطرس رياض بخيت", seatNo: "230215" }, { serial: 254, name: "سارة عبد العظيم عبد القادر عبد العظيم", seatNo: "230216" }, { serial: 255, name: "سارة هشام عبد الرحمن إبراهيم", seatNo: "233062" }, { serial: 256, name: "سامح فوزي جاد الكريم علي إسماعيل", seatNo: "220283" }, { serial: 257, name: "سعيد عبد العاطي سعيد عبد العاطي", seatNo: "233064" }, { serial: 258, name: "سعيد محمد نجاتي حسن", seatNo: "230218" }, { serial: 259, name: "سلسبيلة جمعة وهبة عبد السلام", seatNo: "230219" }, { serial: 260, name: "سلمى عامر سعد أحمد", seatNo: "233065" }, { serial: 261, name: "سليم وليد سليم إبراهيم", seatNo: "230221" }, { serial: 262, name: "سما أسامة محمد جلال أحمد", seatNo: "230601" }, { serial: 263, name: "سما شريف حمدي علي", seatNo: "230222" }, { serial: 264, name: "سماح فوزي فتحي بخيت", seatNo: "230223" }, { serial: 265, name: "سندس عماد الدين عبد الحفيظ خميس", seatNo: "230224" }, { serial: 266, name: "سندس منتصر فتحي ناجي", seatNo: "230225" }, { serial: 267, name: "سهام حسام طه عبد الحميد", seatNo: "233066" }, { serial: 268, name: "سهيلة أحمد فوزي عابدين", seatNo: "220299" }, { serial: 269, name: "سوزان علي عبده علي", seatNo: "230226" }, { serial: 270, name: "شذا محمد أحمد أحمد داهش", seatNo: "230228" }, { serial: 271, name: "شرف محمد سليمان سليمان", seatNo: "230229" }, { serial: 272, name: "شروق جمال يسن طه", seatNo: "230230" }, { serial: 273, name: "شروق محمود حسن عبد اللطيف", seatNo: "230231" }, { serial: 274, name: "شمس بدوي علي جاد", seatNo: "230232" }, { serial: 275, name: "شهد أيمن صلاح الدين صادق", seatNo: "230235" }, { serial: 276, name: "شهد تامر سعيد صابر", seatNo: "233070" }, { serial: 277, name: "شهد جمال فوزي ميزار", seatNo: "230236" }, { serial: 278, name: "شهد عادل عبد العزيز عبد المجيد", seatNo: "233071" }, { serial: 279, name: "شهد عبد الناصر إبراهيم منصور", seatNo: "230238" }, { serial: 280, name: "شهد عماد عطوة سالم", seatNo: "230239" }, { serial: 281, name: "شهد ماهر الملوم محمد", seatNo: "230240" }, { serial: 282, name: "شهد محمدجابر محمد", seatNo: "230241" }, { serial: 283, name: "شهد مصطفى حامد عبد الغني", seatNo: "230244" }, { serial: 284, name: "شيماء حسن محمود يوسف", seatNo: "230245" }, { serial: 285, name: "شيماء محمد عدلي صاوي", seatNo: "220323" }, { serial: 286, name: "شيماء محمود محمد هديب", seatNo: "230246" }, { serial: 287, name: "صلاح سعد علي عبد الرازق", seatNo: "233077" }, { serial: 288, name: "ضحى أحمد محمود سيد", seatNo: "230248" }, { serial: 289, name: "ضحى محمد أحمد علي", seatNo: "230249" }, { serial: 290, name: "طارق عبد الله ربيع عبد المحسن", seatNo: "230250" }, { serial: 291, name: "طه محمود طه سيد علي", seatNo: "230253" }, { serial: 292, name: "عادل محمد عدلي صاوي", seatNo: "230254" }, { serial: 293, name: "عاصم عماد نجاح مرسي", seatNo: "230255" }, { serial: 294, name: "عاطف رضا علي حسن", seatNo: "230256" }, { serial: 295, name: "عبد التواب أحمد عبد المحسن محمد", seatNo: "230257" }, { serial: 296, name: "عبد الرحمن السيد محمد محمود", seatNo: "230260" }, { serial: 297, name: "عبد الرحمن إمام فتحي محمد", seatNo: "230261" }, { serial: 298, name: "عبد الرحمن أحمد قطب العبد", seatNo: "230258" }, { serial: 299, name: "عبد الرحمن أسامة محمد جابر", seatNo: "230259" }, { serial: 300, name: "عبد الرحمن حسين عبيد عون الله", seatNo: "220344" }, { serial: 301, name: "عبد الرحمن رائد نبيل صابر", seatNo: "230263" }, { serial: 302, name: "عبد الرحمن رضا فاروق صالح", seatNo: "230264" }, { serial: 303, name: "عبد الرحمن سيد محيسن عبد الله", seatNo: "230265" }, { serial: 304, name: "عبد الرحمن شعبان محمد عبد الغني", seatNo: "220350" }, { serial: 305, name: "عبد الرحمن صالح مهيدي محمد", seatNo: "230267" }, { serial: 306, name: "عبد الرحمن طارق فضل بكر", seatNo: "220351" }, { serial: 307, name: "عبد الرحمن طاهر حسن محمد", seatNo: "230268" }, { serial: 308, name: "عبد الرحمن طه عبد الحسيب عبد الرحيم", seatNo: "230269" }, { serial: 309, name: "عبد الرحمن عادل مبروك عبد السلام", seatNo: "230270" }, { serial: 310, name: "عبد الرحمن عاطف أنور عبد القوي", seatNo: "230271" }, { serial: 311, name: "عبد الرحمن عزت سنوسي أبو زيد", seatNo: "230272" }, { serial: 312, name: "عبد الرحمن عيد حسن محمد", seatNo: "230273" }, { serial: 313, name: "عبد الرحمن عيد عبد الفتاح عبد العال", seatNo: "230274" }, { serial: 314, name: "عبد الرحمن فتحي حسن خالد", seatNo: "230275" }, { serial: 315, name: "عبد الرحمن محمد السيد على", seatNo: "220355" }, { serial: 316, name: "عبد الرحمن محمد رشدي محمد", seatNo: "220358" }, { serial: 317, name: "عبد الرحمن محمد سعد بكري", seatNo: "230276" }, { serial: 318, name: "عبد الرحمن محمد سعد عبد الحفيظ", seatNo: "230277" }, { serial: 319, name: "عبد الرحمن محمد كمال حسن أبو زيد", seatNo: "230279" }, { serial: 320, name: "عبد الرحمن ممدوح عبد العزيز محمد", seatNo: "230281" }, { serial: 321, name: "عبد الرحمن هاني على عبد التواب", seatNo: "230283" }, { serial: 322, name: "عبد الرؤف حسين عبد الرؤف حسين", seatNo: "230284" }, { serial: 323, name: "عبد السلام الحسن عبد السلام محمد", seatNo: "230285" }, { serial: 324, name: "عبد الشهيد إيهاب عبد الشهيد روفائيل", seatNo: "230286" }, { serial: 325, name: "عبد العاطي محمد عبد العاطي عبد المنعم خضر", seatNo: "230287" }, { serial: 326, name: "عبد العظيم أحمد علي عبد العظيم", seatNo: "230288" }, { serial: 327, name: "عبد الله أحمد عبد التواب أحمد", seatNo: "230291" }, { serial: 328, name: "عبد الله أحمد معوض مبروك", seatNo: "230292" }, { serial: 329, name: "عبد الله حسني عبد الله علي", seatNo: "230293" }, { serial: 330, name: "عبد الله رجب شعبان دسوقي", seatNo: "230294" }, { serial: 331, name: "عبد الله فرج محمد منصور", seatNo: "233085" }, { serial: 332, name: "عبد الله محمد أنور شعبان", seatNo: "230298" }, { serial: 333, name: "عبد الله محمد سعداوي جودة", seatNo: "230299" }, { serial: 334, name: "عبد المحسن علي حسن أحمد محمد", seatNo: "230300" }, { serial: 335, name: "عبد المنعم بلال عبد المنعم بلال", seatNo: "230301" }, { serial: 336, name: "عبد الرحمن هانی سید صبری", seatNo: "223055" }, { serial: 337, name: "عبد الله محمد المهدى محمد تهامي", seatNo: "223056" }, { serial: 338, name: "عبد الله وصفى حسن عبد الموجود", seatNo: "223058" }, { serial: 339, name: "عبيد ابراهيم عبد السلام ابوبكر", seatNo: "220386" }, { serial: 340, name: "عطاء أبو بكر سلامة بكري", seatNo: "233087" }, { serial: 341, name: "علاء بدويمحمد بدوي", seatNo: "233088" }, { serial: 342, name: "علاء حمدي فتحي زكي عبد التواب", seatNo: "230304" }, { serial: 343, name: "علاء علي حسن علي", seatNo: "230305" }, { serial: 344, name: "علاء كامل عبد المنعم كامل", seatNo: "233089" }, { serial: 345, name: "علاء مصطفى سيد علي", seatNo: "230306" }, { serial: 346, name: "علي الحسن أبو الفتوح محمد أحمد", seatNo: "220388" }, { serial: 347, name: "علي أحمد سيد محمد", seatNo: "230307" }, { serial: 348, name: "علي أحمد علي سيد", seatNo: "230309" }, { serial: 349, name: "علي محمد فراج علي", seatNo: "230311" }, { serial: 350, name: "علي محمود سعد عبد المهدي", seatNo: "233090" }, { serial: 351, name: "علي مصطفى عبد العظيم علي", seatNo: "233091" }, { serial: 352, name: "علي نادي علي عبد الوهاب", seatNo: "230313" }, { serial: 353, name: "عماد خميس علي عثمان", seatNo: "233092" }, { serial: 354, name: "عمر أيمن محمد إسماعيل", seatNo: "230315" }, { serial: 355, name: "عمر جمال ناجح كامل", seatNo: "220755" }, { serial: 356, name: "عمر ربيع محمد فرج", seatNo: "230316" }, { serial: 357, name: "عمر محمد أحمد محمود", seatNo: "230318" }, { serial: 358, name: "عمر ناصر محمود مهني", seatNo: "220406" }, { serial: 359, name: "عمرو أشرف محمد محمد عبد الوارث", seatNo: "230596" }, { serial: 360, name: "عمرو حسن محفوظ عبد الحق", seatNo: "230319" }, { serial: 361, name: "عمرو خالد معوض خضر", seatNo: "230321" }, { serial: 362, name: "عمرو طلال عطية أحمد عبد النبي", seatNo: "230323" }, { serial: 363, name: "عمرو طلعت حامد علي", seatNo: "220413" }, { serial: 364, name: "عمرو ناصر محمد حنفي", seatNo: "230324" }, { serial: 365, name: "عيسى محمد شريف مسعد", seatNo: "230325" }, { serial: 366, name: "فادي سعد ملاك كامل", seatNo: "220422" }, { serial: 367, name: "فارس قرني ثابت إبراهيم", seatNo: "220423" }, { serial: 368, name: "فاطمة الزهراء مؤمن رمضان محمد", seatNo: "230326" }, { serial: 369, name: "فاطمة أبو بكر حسن كامل محمد", seatNo: "233098" }, { serial: 370, name: "فاطمة جمال رمضان محمد", seatNo: "230327" }, { serial: 371, name: "فاطمة خالد مأمون محمد", seatNo: "230328" }, { serial: 372, name: "فاطمة رمضان حنفي خليفة", seatNo: "230329" }, { serial: 373, name: "فاطمة عصام عبد الوهاب أمين", seatNo: "220428" }, { serial: 374, name: "فاطمة عماد الدين يحيى محمد", seatNo: "230330" }, { serial: 375, name: "فاطمة محمد حسن جودة", seatNo: "230331" }, { serial: 376, name: "فاطمة محمود محمد عبد النبي", seatNo: "230332" }, { serial: 377, name: "فرحة عيد محمد إبراهيم السيد", seatNo: "230333" }, { serial: 378, name: "كارم علي سيد أحمد", seatNo: "233101" }, { serial: 379, name: "كارين راشد رشدي إسحق", seatNo: "230335" }, { serial: 380, name: "كريم أحمد حسن أحمد", seatNo: "230336" }, { serial: 381, name: "كريم خالد محمد رزق", seatNo: "233102" }, { serial: 382, name: "كريم عاطف قناوي سعد الدين", seatNo: "230338" }, { serial: 383, name: "كريم ماهر روبي لطيف", seatNo: "230339" }, { serial: 384, name: "كريم محمد صلاح عبد الوهاب", seatNo: "230340" }, { serial: 385, name: "کریمان محمود زكي محمد", seatNo: "230343" }, { serial: 386, name: "كمال أبو بكر مصطفى محمد", seatNo: "230344" }, { serial: 387, name: "كيرلس عماد حلمي رزق", seatNo: "230345" }, { serial: 388, name: "كيرلس ماجد ثابت ونيس", seatNo: "230346" }, { serial: 389, name: "كيرلس ملاك يونان عزيز", seatNo: "230347" }, { serial: 390, name: "البني أحمد دياب أحمد كبش", seatNo: "230348" }, { serial: 391, name: "الجين محمد عبد الهادي أحمد عبد الرازق", seatNo: "230349" }, { serial: 392, name: "الوي محمد محمود محمد", seatNo: "230350" }, { serial: 393, name: "ماريو صفوت برتي فكري", seatNo: "220450" }, { serial: 394, name: "ماريو عادل سيد هندي", seatNo: "230353" }, { serial: 395, name: "مازن إيهاب عبد الفتاح فتح الله محمود", seatNo: "230358" }, { serial: 396, name: "مازن أحمد حسن علي", seatNo: "230354" }, { serial: 397, name: "مازن أحمد عبد النعيم حسن", seatNo: "230355" }, { serial: 398, name: "مازن أحمد محمد محمد", seatNo: "230356" }, { serial: 399, name: "مازن أيمن كمال السيد", seatNo: "230357" }, { serial: 400, name: "مازن عبد المنصف رمضان السيد سليمان", seatNo: "233104" }, { serial: 401, name: "مازن عماد أحمد مجاور", seatNo: "220453" }, { serial: 402, name: "مازن متولي عبد الماجد إبراهيم", seatNo: "230359" }, { serial: 403, name: "مالك الجارح محمد شاكر", seatNo: "230595" }, { serial: 404, name: "مجدي وهبة حليم عطية", seatNo: "230361" }, { serial: 405, name: "محمد ابراهيم سالم عبد الرحيم", seatNo: "223069" }, { serial: 406, name: "محمد ابو الدهب عيد عبد القادر", seatNo: "230363" }, { serial: 407, name: "محمد إبراهيم عبد الله محمود جاد", seatNo: "233105" }, { serial: 408, name: "محمد إبراهيم محمد عيسوي", seatNo: "230362" }, { serial: 409, name: "محمد أحمد البدوي محمد عبد الحميد", seatNo: "230366" }, { serial: 410, name: "محمد أحمد أبو بكر عبد الحميد", seatNo: "230365" }, { serial: 411, name: "محمد أحمد جمعة أحمد", seatNo: "230367" }, { serial: 412, name: "محمد أحمد جودة ساري", seatNo: "230368" }, { serial: 413, name: "محمد أحمد سيد بيومي", seatNo: "230369" }, { serial: 414, name: "محمد أحمد عبد الفتاح سعداوي", seatNo: "230370" }, { serial: 415, name: "محمد أحمد علام أحمد", seatNo: "230371" }, { serial: 416, name: "محمد أحمد علي عبد اللطيف", seatNo: "230372" }, { serial: 417, name: "محمد أحمد علي محمد", seatNo: "233106" }, { serial: 418, name: "محمد أحمد محمد عبد القادر ظريف", seatNo: "230374" }, { serial: 419, name: "محمد أحمد محمد عبد الله", seatNo: "220465" }, { serial: 420, name: "محمد أشرف عمران عويس", seatNo: "230379" }, { serial: 421, name: "محمد أيمن إسماعيل عبد الفتاح", seatNo: "230382" }, { serial: 422, name: "محمد ايمن عبد الهادي محمد", seatNo: "230599" }, { serial: 423, name: "محمد أيمن يوسف عبد الله", seatNo: "230383" }, { serial: 424, name: "محمد أيوب عبد الله برهام", seatNo: "230384" }, { serial: 425, name: "محمد جاد الكريم محمد أحمد", seatNo: "230386" }, { serial: 426, name: "محمد جمال محمد احمد", seatNo: "223071" }, { serial: 427, name: "محمد جمال محمد ناصف الجندي", seatNo: "230387" }, { serial: 428, name: "محمد جمعة محمد النحال", seatNo: "220480" }, { serial: 429, name: "محمد حامد زكي شحاتة", seatNo: "233108" }, { serial: 430, name: "محمد حسن سيد علي عبد السيد", seatNo: "230388" }, { serial: 431, name: "محمد حسين رمضان محروس", seatNo: "230389" }, { serial: 432, name: "محمد حسين صالح السيد", seatNo: "230390" }, { serial: 433, name: "محمد حسين محمود توفيق", seatNo: "230391" }, { serial: 434, name: "محمد حسين مصطفى محمد", seatNo: "233109" }, { serial: 435, name: "محمد حمادة عبد الله محمد زيادة", seatNo: "230392" }, { serial: 436, name: "محمد حمد مصري محمد", seatNo: "230394" }, { serial: 437, name: "محمد حمدي محمد عبد العظيم", seatNo: "230602" }, { serial: 438, name: "محمد حمدي محمد عبد المنعم", seatNo: "230395" }, { serial: 439, name: "محمد خالد سعيد عبد النعيم", seatNo: "230396" }, { serial: 440, name: "محمد خالد عبد التواب شحاتة", seatNo: "230397" }, { serial: 441, name: "محمد خالد كمال محمد", seatNo: "230398" }, { serial: 442, name: "محمد خالد محمد حافظ", seatNo: "230399" }, { serial: 443, name: "محمد خالد محمد محمود", seatNo: "230400" }, { serial: 444, name: "محمد ربيع فؤاد صديق", seatNo: "233110" }, { serial: 445, name: "محمد رشوان محروس هاشم", seatNo: "230401" }, { serial: 446, name: "محمد رضا محمود نصر", seatNo: "230402" }, { serial: 447, name: "محمد رمضان أحمد سنوسي", seatNo: "230403" }, { serial: 448, name: "محمد رمضان خليل الشناوي", seatNo: "230404" }, { serial: 449, name: "محمد رمضان محمد محمد", seatNo: "220496" }, { serial: 450, name: "محمد رياض صالح علواني", seatNo: "230405" }, { serial: 451, name: "محمد سعد خليل محمد سيف", seatNo: "230406" }, { serial: 452, name: "محمد سليم زعفان سليم", seatNo: "233112" }, { serial: 453, name: "محمد سليمان نمر عبد النبي", seatNo: "230407" }, { serial: 454, name: "محمد سید شعيشع شعيب", seatNo: "230408" }, { serial: 455, name: "محمد سيد عبد المنعم علام", seatNo: "220500" }, { serial: 456, name: "محمد صلاح محمد أحمد", seatNo: "230411" }, { serial: 457, name: "محمد طه عبد العظيم عبد الحفيظ", seatNo: "230412" }, { serial: 458, name: "محمد عادل محمد عبد العليم", seatNo: "230413" }, { serial: 459, name: "محمد عاطف عيد عبد المحسن", seatNo: "220510" }, { serial: 460, name: "محمد عبد الصالحين فتحي عبد ربه", seatNo: "233115" }, { serial: 461, name: "محمد عبد العظيم محمد عبد اللطيف", seatNo: "220512" }, { serial: 462, name: "محمد عبد الناصر عبد الفتاح عيسى", seatNo: "233117" }, { serial: 463, name: "محمد عبد الواحد فاروق عبد الواحد", seatNo: "230418" }, { serial: 464, name: "محمد عبد الباسط سيد حسن", seatNo: "230414" }, { serial: 465, name: "محمد علواني محمد علواني", seatNo: "230419" }, { serial: 466, name: "محمد علي إبراهيم السيد", seatNo: "230420" }, { serial: 467, name: "محمد علي أيوب عبده", seatNo: "220518" }, { serial: 468, name: "محمد علي سليم علي", seatNo: "230421" }, { serial: 469, name: "محمد علي محمد العباسي علي", seatNo: "220519" }, { serial: 470, name: "محمد عماد عبد الفتاح محمد", seatNo: "220523" }, { serial: 471, name: "محمد عنتر فؤاد عبد اللطيف", seatNo: "220525" }, { serial: 472, name: "محمد عيد كامل عبد الله", seatNo: "230422" }, { serial: 473, name: "محمد عيد مصطفى رجب", seatNo: "230423" }, { serial: 474, name: "محمد فايز محمد عبد الوهاب", seatNo: "230424" }, { serial: 475, name: "محمد فتحي شوقي عبد اللطيف", seatNo: "233119" }, { serial: 476, name: "محمد فرج محمد عبد اللهي", seatNo: "230425" }, { serial: 477, name: "محمد مجدي محمد سلامة", seatNo: "230427" }, { serial: 478, name: "محمد محمد أبو حسيبة عبد الله", seatNo: "220530" }, { serial: 479, name: "محمد محمود السيد محمد", seatNo: "230428" }, { serial: 480, name: "محمد ممدوح محمد محمود", seatNo: "233121" }, { serial: 481, name: "محمد نزيه محمد عبد العال", seatNo: "220543" }, { serial: 482, name: "محمد هاشم محمد العربي", seatNo: "230431" }, { serial: 483, name: "محمد هاني رمضان قاسم شلتوت", seatNo: "230432" }, { serial: 484, name: "محمد يوسف أعظم طاهر", seatNo: "220547" }, { serial: 485, name: "محمود الشربيني أبو زيد إبراهيم", seatNo: "230440" }, { serial: 486, name: "محمود أحمد عاطف طه", seatNo: "230437" }, { serial: 487, name: "محمود أحمد عبد الله عطية", seatNo: "230438" }, { serial: 488, name: "محمود أحمد قرني محمد", seatNo: "233124" }, { serial: 489, name: "محمود احمد محمد حسين عبد المجيد", seatNo: "220550" }, { serial: 490, name: "محمود أسعد ديب ابو النور", seatNo: "230439" }, { serial: 491, name: "محمود بكري محمد علي", seatNo: "230441" }, { serial: 492, name: "محمود حسن احمد عباس", seatNo: "223085" }, { serial: 493, name: "محمود رأفت شعبان محمد", seatNo: "220560" }, { serial: 494, name: "محمود زغلول محمد حافظ", seatNo: "230442" }, { serial: 495, name: "محمود شعبان محمود تمام", seatNo: "220562" }, { serial: 496, name: "محمود غانم السيد غانم", seatNo: "233127" }, { serial: 497, name: "محمود محمد عبد التواب محمد", seatNo: "230448" }, { serial: 498, name: "محمود محمد عبد السلام محمد", seatNo: "230449" }, { serial: 499, name: "محمود محمد عبد اللطيف أمين", seatNo: "233128" }, { serial: 500, name: "مراد محمد مراد عبد الوهاب", seatNo: "230453" }, { serial: 501, name: "مروان صلاح عشري إبراهيم", seatNo: "220574" }, { serial: 502, name: "مروان طه أحمد طرفاية", seatNo: "230454" }, { serial: 503, name: "مروان وليد عبد الفتاح محمد", seatNo: "230455" }, { serial: 504, name: "مروة محمود شلبي محمد", seatNo: "233130" }, { serial: 505, name: "مريم إبراهيم طه أحمد", seatNo: "230456" }, { serial: 506, name: "مريم أحمد أبو الفتوح البنا", seatNo: "230457" }, { serial: 507, name: "مريم أيمن حجازي أحمد", seatNo: "230458" }, { serial: 508, name: "مريم حمدي رمضان عبد الحميد", seatNo: "230459" }, { serial: 509, name: "مريم سالم عبد العظيم صوفي", seatNo: "230460" }, { serial: 510, name: "مريم عادل فايق فهمي", seatNo: "230461" }, { serial: 511, name: "مريم عبد الله محمد أحمد سرحان", seatNo: "230462" }, { serial: 512, name: "مريم محمد أشرف حامد", seatNo: "220590" }, { serial: 513, name: "مريم محمد جابر جودة", seatNo: "230463" }, { serial: 514, name: "مريم محمد عبد الله عبد الرزاق", seatNo: "220591" }, { serial: 515, name: "مريم محمد علي شعبان", seatNo: "230464" }, { serial: 516, name: "مريم محمد عويس روبي", seatNo: "230465" }, { serial: 517, name: "مريم هاني عبد الظاهر محمد", seatNo: "230466" }, { serial: 518, name: "مصطفى أحمد صالح علي", seatNo: "220594" }, { serial: 519, name: "مصطفى عبد الرحمن محمد عبد الباقي", seatNo: "230468" }, { serial: 520, name: "مصطفى عبد المجيد سعداوي عبد المجيد", seatNo: "230470" }, { serial: 521, name: "مصطفى عبد المنعم علي زكي", seatNo: "230471" }, { serial: 522, name: "مصطفى عصام اوری سید", seatNo: "230472" }, { serial: 523, name: "مصطفى عصمت محمد خميس", seatNo: "223091" }, { serial: 524, name: "مصطفى علي محمد علي", seatNo: "230473" }, { serial: 525, name: "مصطفى عمر جلال أمين", seatNo: "230474" }, { serial: 526, name: "مصطفى محمد رمضان أحمد أحمد", seatNo: "233133" }, { serial: 527, name: "مصطفى محمد محمود محمد", seatNo: "230475" }, { serial: 528, name: "مصطفى محمد مصطفى حافظ", seatNo: "230476" }, { serial: 529, name: "مصطفى محمود محمد محمود", seatNo: "230477" }, { serial: 530, name: "معاذ محمد عبد الفتاح عبد الرحيم", seatNo: "230479" }, { serial: 531, name: "معتز سامي مرسي بدران", seatNo: "230480" }, { serial: 532, name: "معتز طارق جمعة شحاتة", seatNo: "233134" }, { serial: 533, name: "معتز نادي كامل إسماعيل", seatNo: "230481" }, { serial: 534, name: "ملك أحمد عثمان صلاح محمد", seatNo: "230482" }, { serial: 535, name: "ملك أسامة علي محمد سعد", seatNo: "230483" }, { serial: 536, name: "ملك أشرف سعد عبد الفتاح غانم", seatNo: "230484" }, { serial: 537, name: "ملك أيمن حسن محمد", seatNo: "220617" }, { serial: 538, name: "ملك خميس أحمد خميس", seatNo: "233135" }, { serial: 539, name: "ملك عمرو علي حسن", seatNo: "230485" }, { serial: 540, name: "ملك محمد رجائي زين", seatNo: "230486" }, { serial: 541, name: "ملك محمد سيد سعيد", seatNo: "230487" }, { serial: 542, name: "ملك محمود محمد أبو غنيمة", seatNo: "230488" }, { serial: 543, name: "ملك يحي عوض عبد ربه", seatNo: "230489" }, { serial: 544, name: "منار إبراهيم حمودة مجاهد", seatNo: "230490" }, { serial: 545, name: "منار سعد الدين محمد علي", seatNo: "230491" }, { serial: 546, name: "منار محمد عبد الوهاب حسين", seatNo: "233136" }, { serial: 547, name: "منار محمود أحمد حسن علي", seatNo: "230493" }, { serial: 548, name: "منار مرزوق عيد سالم", seatNo: "230494" }, { serial: 549, name: "منة الله إيهاب عبد الهادي محمود", seatNo: "230498" }, { serial: 550, name: "منة الله أحمد عبد الوهاب حسن", seatNo: "230496" }, { serial: 551, name: "منة الله بكري رمضان السيد", seatNo: "230499" }, { serial: 552, name: "منة الله علاء محمد محمد أحمد", seatNo: "230500" }, { serial: 553, name: "منة الله هلال محمد إسماعيل", seatNo: "220636" }, { serial: 554, name: "منة الله وليد عبد التواب عبد العزيز", seatNo: "230501" }, { serial: 555, name: "منة أشرف محمد حسنين السيد", seatNo: "230495" }, { serial: 556, name: "منة محمد خلاف أحمد", seatNo: "230504" }, { serial: 557, name: "منة مختار محمدين أحمد", seatNo: "230505" }, { serial: 558, name: "منى عبد السلام محمد محمود", seatNo: "230506" }, { serial: 559, name: "مهاب أحمد محمد أحمد", seatNo: "230507" }, { serial: 560, name: "مهاب محمود رمضان أحمد قاعود", seatNo: "230508" }, { serial: 561, name: "مهند نادي سيد أبو بكر", seatNo: "230509" }, { serial: 562, name: "مؤمن أسعد عباس عبد الله", seatNo: "230510" }, { serial: 563, name: "مؤمن محمد قرني عبد الحميد", seatNo: "230511" }, { serial: 564, name: "مي رأفت عبد الرحمن خليفة", seatNo: "230512" }, { serial: 565, name: "مي كامل ناجي عبد الحليم أحمد", seatNo: "230513" }, { serial: 566, name: "مي ناصر بكري محمد", seatNo: "230514" }, { serial: 567, name: "مي هاني فاروق عيد", seatNo: "230515" }, { serial: 568, name: "ميار صفوت مصطفى عيسى", seatNo: "220651" }, { serial: 569, name: "مينا عماد صليب حسب الله", seatNo: "230517" }, { serial: 570, name: "مينا ممدوح اسرائيل روفائيل", seatNo: "230518" }, { serial: 571, "name": "ندا جمال أحمد عبد الله", "seatNo": "233137" }, { serial: 572, "name": "ندى أحمد أحمد محمد فودة", "seatNo": "230519" }, { serial: 573, "name": "ندى علاء الدين محمد سيد", "seatNo": "230521" }, { serial: 574, "name": "ندى على نوبى متولي", "seatNo": "230522" }, { serial: 575, "name": "ندى كمال عبد الوهاب معوض", "seatNo": "230523" }, { serial: 576, "name": "ندى مبروك محمد حسن محمد", "seatNo": "230524" }, { serial: 577, "name": "ندى محمد ابو هشيمه محمود", "seatNo": "230525" }, { serial: 578, "name": "ندى ناصر إمام سعيد", "seatNo": "230527" }, { serial: 579, "name": "ندى يوسف محمد إسماعيل", "seatNo": "230528" }, { serial: 580, "name": "نصر محمود نصر عبد الغفار", "seatNo": "230529" }, { serial: 581, "name": "نعم حاتم كمال محمد سيد", "seatNo": "230530" }, { serial: 582, "name": "نغم عمرو عبد الواحد عبد المنعم", "seatNo": "230531" }, { serial: 583, "name": "نور محمد شلقامي إبراهيم", "seatNo": "233138" }, { serial: 584, "name": "نور مصطفى عويس القرني", "seatNo": "230533" }, { serial: 585, "name": "نورا أشرف سيد محمد", "seatNo": "230534" }, { serial: 586, "name": "نوران أحمد صبري عبد المنعم", "seatNo": "230535" }, { serial: 587, "name": "نورهان شعبان رجب توفيق", "seatNo": "230536" }, { serial: 588, "name": "نورهان محمد جمعة علي", "seatNo": "230537" }, { serial: 589, "name": "نورهان محمد سید محمد", "seatNo": "230538" }, { serial: 590, "name": "نورهان محمد محمد عبد اللطيف", "seatNo": "233139" }, { serial: 591, "name": "نورهان يوسف محمد إسماعيل", "seatNo": "230539" }, { serial: 592, "name": "نورين عبد الحليم عبد الغني طايل", "seatNo": "230540" }, { serial: 593, "name": "نيرمين حسن مرسي حسن", "seatNo": "230541" }, { serial: 594, "name": "هاجر أشرف علي طلب", "seatNo": "230542" }, { serial: 595, "name": "هاجر عبد التواب شعبان عبد العليم", "seatNo": "230543" }, { serial: 596, "name": "هاجر عبد المجيد كامل سيد", "seatNo": "223100" }, { serial: 597, "name": "هاجر عيد سيد توفيق", "seatNo": "230544" }, { serial: 598, "name": "هاجر ناصر سعيد محمد", "seatNo": "230545" }, { serial: 599, "name": "هايدي علاء الدين حسين عباس", "seatNo": "230546" }, { serial: 600, "name": "هبة وجيه قرني عوض عثمان", "seatNo": "230547" }, { serial: 601, "name": "هدى محمد عبد اللاه علي", "seatNo": "230548" }, { serial: 602, "name": "هدير ثروت إبراهيم سعيد", "seatNo": "230549" }, { serial: 603, "name": "همس أحمد رفقي عبد اللطيف", "seatNo": "230550" }, { serial: 604, "name": "همس شهاب على مصلح", "seatNo": "230551" }, { serial: 605, "name": "همس محمد محمود محمد", "seatNo": "230552" }, { serial: 606, "name": "هناء محمود عبد المنعم منصور", "seatNo": "230553" }, { serial: 607, "name": "هند عبد اللطيف فخري مصطفى", "seatNo": "230554" }, { serial: 608, "name": "هويدا عاشور فرج الله حسن", "seatNo": "230555" }, { serial: 609, "name": "وسام محمود فوزي جابر", "seatNo": "230556" }, { serial: 610, "name": "وصال خالد محمد علي", "seatNo": "230557" }, { serial: 611, "name": "وصال وائل رمضان سليمان", "seatNo": "230558" }, { serial: 612, "name": "وفاء حسين أحمد حسن", "seatNo": "233142" }, { serial: 613, "name": "ولاء رزق محمود رجب", "seatNo": "230559" }, { serial: 614, "name": "ولاء صالح محمد منصور", "seatNo": "230560" }, { serial: 615, "name": "يارا محمد رشيدي", "seatNo": "230562" }, { serial: 616, "name": "يارة فرحات إسماعيل مندي", "seatNo": "230563" }, { serial: 617, "name": "ياسر أحمد محمد أحمد", "seatNo": "230564" }, { serial: 618, "name": "ياسمين أحمد محمد عبد الستار", "seatNo": "230565" }, { serial: 619, "name": "ياسمين عبد العزيز حسن عبد العزيز الشنواني", "seatNo": "230566" }, { serial: 620, "name": "ياسمين علاء الدين فتحي أحمد", "seatNo": "230567" }, { serial: 621, "name": "ياسمين فرج محمود عبد السلام", "seatNo": "220714" }, { serial: 622, "name": "يحيى أحمد علي أحمد", "seatNo": "230568" }, { serial: 623, "name": "يحيى خالد جمال عثمان", "seatNo": "230569" }, { serial: 624, "name": "يسرا أيمن محمد سيد إبراهيم", "seatNo": "230570" }, { serial: 625, "name": "يمني سلامة دريس صايم", "seatNo": "230571" }, { serial: 626, "name": "يمنى عماد أبو بكر روبي", "seatNo": "230572" }, { serial: 627, "name": "يوسف السيد شعبان عبد التواب", "seatNo": "230575" }, { serial: 628, "name": "يوسف أحمد السيد عبد الوهاب", "seatNo": "230573" }, { serial: 629, "name": "يوسف أحمد محمد حلمي محمود عبد العزيز", "seatNo": "230574" }, { serial: 630, "name": "يوسف أيمن محمد محمد", "seatNo": "230577" }, { serial: 631, "name": "يوسف جمال الورداني السيد", "seatNo": "230578" }, { serial: 632, "name": "يوسف حسين محمد أحمد", "seatNo": "230579" }, { serial: 633, "name": "يوسف رجب سید سلیمان", "seatNo": "230580" }, { serial: 634, "name": "يوسف سعيد محمد عبد اللطيف", "seatNo": "230581" }, { serial: 635, "name": "يوسف سيد فؤاد حنفي", "seatNo": "230582" }, { serial: 636, "name": "يوسف عبد الباسط إبراهيم يوسف", "seatNo": "230583" }, { serial: 637, "name": "يوسف عصام جيوشي عبد القادر", "seatNo": "230584" }, { serial: 638, "name": "يوسف على محمد عبد الله", "seatNo: "230585" }, { serial: 639, "name": "يوسف عماد أحمد محمد", "seatNo": "230586" }, { serial: 640, "name": "يوسف فرج الله ماهر ميخائيل", "seatNo": "223107" }, { serial: 641, "name": "يوسف محمد أحمد يسن محمد", "seatNo": "230588" }, { serial: 642, "name": "يوسف محمد حسن علي", "seatNo": "230589" }, { serial: 643, "name": "يوسف محمد سعد عبد اللطيف", "seatNo": "230590" }, { serial: 644, "name": "يوسف هاني مسعود عبد اللطيف", "seatNo": "230593" } ];
+
+        const groups = [ { group: 1, start: 1, end: 35 }, { group: 2, start: 36, end: 70 }, { group: 3, start: 71, end: 105 }, { group: 4, start: 106, end: 140 }, { group: 5, start: 141, end: 175 }, { group: 6, start: 176, end: 210 }, { group: 7, start: 211, end: 245 }, { group: 8, start: 246, end: 280 }, { group: 9, start: 281, end: 315 }, { group: 10, start: 316, end: 350 }, { group: 11, start: 351, end: 385 }, { group: 12, start: 386, end: 420 }, { group: 13, start: 421, end: 455 }, { group: 14, start: 456, end: 490 }, { group: 15, start: 491, end: 525 }, { group: 16, start: 526, end: 560 }, { group: 17, start: 561, end: 595 }, { group: 18, start: 596, end: 630 }, { group: 19, start: 631, end: 644 } ];
+        const topics = {
+            1: { title: "Antenatal Care", focus: "What Every Mother Should Know", image_prompt: "High-quality photo of a smiling, professional female doctor of Middle Eastern descent talking to a pregnant woman in a bright, modern, and clean clinic.", icon_prompt: "A simple, minimalist, flat icon of a pregnant woman's silhouette inside a heart. Single calm blue color on a transparent background. Vector style.", system_prompt: "You are a medical content writer. Create structured HTML content for a 3-column leaflet about Antenatal Care. Column 1 (Inner Flap): Start with <h3>What is Antenatal Care?</h3>, followed by a <p> explaining its definition and relevance to PHC. Column 2 (Back Panel): Use <h3>Key Aspects of Your Care</h3>, then list 3-4 points using <h4>subheadings</h4> and <p> for explanations (e.g., 'Regular Check-ups', 'Nutrition Counseling'). Column 3 (Front Panel): Use <h3>Antenatal Care in Egypt</h3>, describe PHC examples in a <p>, and end with a <h4>What Should You Do?</h4> subheading and a final <p> call to action. Use simple, clear English." },
+            2: { title: "Danger Signs in Pregnancy", focus: "When to Seek Help", image_prompt: "High-quality illustration of a concerned pregnant woman looking at a checklist, with a helpful nurse pointing to it. Warm, supportive, and clear style.", icon_prompt: "A simple, minimalist, flat icon of a warning sign with a heart inside. Single calm blue color on a transparent background. Vector style.", system_prompt: "You are a medical content writer. Create structured HTML content for a 3-column leaflet about Danger Signs in Pregnancy. Column 1 (Inner Flap): Start with <h3>Why is this Important?</h3>, followed by a <p> on relevance to PHC. Column 2 (Back Panel): Use <h3>Recognize These Signs</h3>, then a <ul> with <li> for each key danger sign. Column 3 (Front Panel): Use <h3>Immediate Help in Egypt</h3>, describe PHC examples in a <p>, and end with a <h4>When to Seek Help</h4> subheading and a final <p> call to action. Use simple, clear English." },
+            3: { title: "Physical Activity Promotion in PHC", focus: "Your Guide to a Healthier Lifestyle", image_prompt: "A vibrant, high-quality photo of a diverse group of people (all ages, genders) joyfully exercising outdoors in a sunny park.", icon_prompt: "A simple, minimalist, flat icon of a running shoe with a small heart. Single calm blue color on a transparent background. Vector style.", system_prompt: "You are a medical writer. Create structured HTML for a 3-fold leaflet. Column 1 (Inner flap): Use <h3>What is Physical Activity?</h3> and a <p> defining it and its PHC importance. Column 2 (Back panel): Use <h3>Benefits & Types</h3>, then two <h4> sections for 'Health Benefits' and 'Types of Exercise' with <p> or <ul>. Column 3 (Front panel): Use <h3>Activity Programs in Egypt</h3>, a <p> with examples, and a <h4>Get Started Today!</h4> call to action. Use simple English." },
+            4: { title: "Safe Delivery Practices", focus: "Your Guide to a Healthy Birth", image_prompt: "A calm, professional high-quality photo of a delivery room with a supportive doctor and nurse assisting a new mother.", icon_prompt: "A simple, minimalist, flat icon of a baby protected by two hands. Single calm blue color on a transparent background. Vector style.", system_prompt: "You are a medical writer. Create structured HTML for a 3-fold leaflet. Column 1 (Inner flap): Use <h3>What is a Safe Delivery?</h3> and a <p> explaining its PHC role. Column 2 (Back panel): Use <h3>Key Practices for Safety</h3>, with <h4> sections for 'Cleanliness' and 'Skilled Attendant'. Column 3 (Front panel): Use <h3>Safe Births in Egypt</h3>, a <p> on the role of PHC units, and a <h4>Your Next Step</h4> call to action. Use simple English." },
+            5: { title: "Postnatal Care", focus: "Caring for the Mother After Birth", image_prompt: "A warm, caring high-quality photo of a new mother holding her baby, smiling, with a supportive nurse visiting her at home.", icon_prompt: "A simple, minimalist, flat icon of a mother and child silhouette. Single calm blue color on a transparent background. Vector style.", system_prompt: "You are a medical writer. Create structured HTML for a 3-fold leaflet. Column 1 (Inner flap): Use <h3>What is Postnatal Care?</h3> and a <p> defining its importance. Column 2 (Back panel): Use <h3>Health Checks for Mother & Baby</h3>, with two <h4> sections for each. Column 3 (Front panel): Use <h3>Postnatal Services in Egypt</h3>, a <p> listing services in PHC units, and a <h4>Book Your Visit</h4> call to action. Use simple English." },
+            6: { title: "School Health Program", focus: "Healthy Students, Bright Future", image_prompt: "A bright, positive high-quality photo of a smiling school nurse checking a happy student's height in a clean, well-lit room.", icon_prompt: "A simple, minimalist, flat icon of a school building with a medical plus sign on top. Single calm blue color on a transparent background. Vector style.", system_prompt: "You are a medical writer. Create structured HTML for a 3-fold leaflet. Column 1 (Inner flap): Use <h3>About School Health</h3> and a <p> defining the program. Column 2 (Back panel): Use <h3>Key Activities</h3>, with <h4> sections for 'Screening', 'Vaccination', and 'Hygiene Promotion'. Column 3 (Front panel): Use <h3>Our Program in Egypt</h3>, a <p> with examples from schools, and a <h4>Stay Healthy!</h4> call to action. Use simple English." },
+            7: { title: "Smoking Cessation in PHC", focus: "Quit Today for a Better Tomorrow", image_prompt: "Symbolic, hopeful, high-quality photo of a person's hands breaking a cigarette, with a bright sunrise in the background.", icon_prompt: "A simple, minimalist, flat icon of a broken cigarette with a green leaf growing from it. Single calm blue color on a transparent background. Vector style.", system_prompt: "You are a medical writer. Create structured HTML for a 3-fold leaflet. Column 1 (Inner flap): Use <h3>Your Doctor Can Help</h3> and a <p> explaining the role of PHC. Column 2 (Back panel): Use <h3>Methods to Quit</h3>, with <h4> sections for 'Counseling' and 'Support'. Column 3 (Front panel): Use <h3>Egypt's Fight Against Smoking</h3>, a <p> on national initiatives, and a <h4>Ready to Quit?</h4> call to action. Use simple English." },
+            19: { title: "Healthy Habits for School Children", focus: "Hygiene, Sleep, and Nutrition", image_prompt: "A colorful, happy high-quality photo of a school child proudly showing clean hands after washing them at a sink.", icon_prompt: "A simple, minimalist, flat icon of an apple with a toothbrush next to it. Single calm blue color on a transparent background. Vector style.", system_prompt: "You are a medical content writer. Create structured HTML for a 3-column leaflet. Column 1 (Inner Flap): Use <h3>Why Healthy Habits Matter</h3> and a <p> on relevance to School Health. Column 2 (Back Panel): Use <h3>Top 3 Healthy Habits</h3>, with <h4> sections for 'Hand Hygiene', 'Good Sleep', and 'Balanced Nutrition'. Column 3 (Front Panel): Use <h3>Healthy Schools in Egypt</h3>, a <p> with program examples, and a <h4>Start Today!</h4> call to action. Use simple English." }
+        };
+
+        // --- APPLICATION LOGIC ---
+        const generateButton = document.getElementById('generateButton');
+        const serialInput = document.getElementById('serialNumber');
+        const leafletOutput = document.getElementById('leafletOutput');
+        const errorMessage = document.getElementById('error-message');
+        const printControls = document.getElementById('print-controls');
+        const aiToolsContainer = document.getElementById('ai-tools-container');
+        const themeSelectorContainer = document.getElementById('theme-selector-container');
+        const themeSelector = document.getElementById('theme-selector');
+        const modal = document.getElementById('ai-modal');
+        const modalTitle = document.getElementById('modal-title');
+        const modalBody = document.getElementById('modal-body');
+        const closeModalBtn = document.getElementById('close-modal-btn');
+        const listenBtn = document.getElementById('listenBtn');
+        const listenBtnText = document.getElementById('listen-btn-text');
+        const listenSpinner = document.getElementById('listen-spinner');
+        const downloadPdfBtn = document.getElementById('downloadPdfBtn');
+        
+        const base64ToArrayBuffer = (base64) => { const binaryString = window.atob(base64); const len = binaryString.length; const bytes = new Uint8Array(len); for (let i = 0; i < len; i++) { bytes[i] = binaryString.charCodeAt(i); } return bytes.buffer; };
+        const pcmToWav = (pcmData, sampleRate) => { const numChannels = 1; const bytesPerSample = 2; const blockAlign = numChannels * bytesPerSample; const byteRate = sampleRate * blockAlign; const dataSize = pcmData.length * bytesPerSample; const buffer = new ArrayBuffer(44 + dataSize); const view = new DataView(buffer); view.setUint32(0, 0x52494646, false); view.setUint32(4, 36 + dataSize, true); view.setUint32(8, 0x57415645, false); view.setUint32(12, 0x666d7420, false); view.setUint32(16, 16, true); view.setUint16(20, 1, true); view.setUint16(22, numChannels, true); view.setUint32(24, sampleRate, true); view.setUint32(28, byteRate, true); view.setUint16(32, blockAlign, true); view.setUint16(34, 16, true); view.setUint32(36, 0x64617461, false); view.setUint32(40, dataSize, true); const pcm16 = new Int16Array(pcmData); for (let i = 0; i < pcm16.length; i++) { view.setInt16(44 + i * 2, pcm16[i], true); } return new Blob([view], { type: "audio/wav" }); };
+
+        function findStudent(serial) { return students.find(s => s.serial == serial) || null; }
+        function findGroupAndTopic(serial) {
+            const groupInfo = groups.find(g => serial >= g.start && serial <= g.end);
+            if (!groupInfo) return null;
+            currentTopic = topics[groupInfo.group] || topics[1];
+            return { group: groupInfo.group, topic: currentTopic };
+        }
+        function setLoading(isLoading, text = 'جاري الإنشاء...', progress = 0) {
+            generateButton.disabled = isLoading;
+            document.getElementById('button-text').textContent = isLoading ? text : 'إنشاء المطوية';
+            document.getElementById('button-spinner').classList.toggle('hidden', !isLoading);
+            
+            // Update progress bar
+            const progressBar = document.getElementById('progressBar');
+            if (progressBar) {
+                progressBar.style.width = `${progress}%`;
+            }
+        }
+        
+        async function callGeminiAPI(payload, model = 'gemini-2.5-flash-preview-05-20') {
+             const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/${model}:generateContent?key=${apiKey}`;
+             try { const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) }); if (!response.ok) { console.error("API Error:", response.status, await response.text()); return null; } return await response.json(); } catch (error) { console.error("Fetch Error:", error); return null; }
+        }
+
+        async function generateTextContent(topic) {
+            const payload = { contents: [{ parts: [{ text: `Generate leaflet content for the topic: ${topic.title}` }] }], systemInstruction: { parts: [{ text: topic.system_prompt }] }, generationConfig: { responseMimeType: "application/json", responseSchema: { type: "OBJECT", properties: { col1: { type: "STRING" }, col2: { type: "STRING" }, col3: { type: "STRING" } }, required: ["col1", "col2", "col3"] } } };
+            const result = await callGeminiAPI(payload);
+            const resultText = result?.candidates?.[0]?.content?.parts?.[0]?.text || null;
+            try { const parsedResult = JSON.parse(resultText); currentLeafletContent = `Title: ${topic.title}\n\n${parsedResult.col1}\n\n${parsedResult.col2}\n\n${parsedResult.col3}`; return parsedResult; } catch (e) { console.error("Error parsing LLM response:", e); return { col1: "<p>Error loading content.</p>", col2: "<p>Please try again.</p>", col3: "" }; }
+        }
+
+        async function generateImage(prompt) {
+            try {
+                const apiKey = ""; const apiUrl = `https://generativelanguage.googleapis.com/v1beta/models/imagen-3.0-generate-002:predict?key=${apiKey}`;
+                const payload = { instances: [{ prompt: prompt }], parameters: { "sampleCount": 1 } };
+                const response = await fetch(apiUrl, { method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(payload) });
+                if (!response.ok) { console.error("API Error:", response.status, await response.text()); return null; }
+                const result = await response.json(); return result.predictions && result.predictions[0]?.bytesBase64Encoded ? `data:image/png;base64,${result.predictions[0].bytesBase64Encoded}` : null;
+            } catch (error) { console.error("Failed to generate image:", error); return null; }
+        }
+        
+        function setupThemeSelector() {
+            themeSelector.innerHTML = '';
+            const themeColors = {
+                'theme-1': 'linear-gradient(135deg, #e0f2fe, #f0fdf4)', 'theme-2': '#fffbeb', 'theme-3': '#f9fafb', 'theme-4': '#f0fdf4', 'theme-5': '#1f2937', 'theme-6': '#eff6ff', 'theme-7': 'linear-gradient(135deg, #1e3a8a, #93c5fd)', 'theme-8': 'linear-gradient(135deg, #fce7f3, #f3e8ff)', 'theme-9': 'white', 'theme-10': '#fdf6e3', 'theme-11': '#ecfeff', 'theme-12': '#f0fdfa', 'theme-13': '#f5f3ff', 'theme-14': '#f8fafc', 'theme-15': '#fff1f2', 'theme-16': '#f0fff4', 'theme-17': '#faf5ff', 'theme-18': '#fffde7', 'theme-19': '#ffffff', 'theme-20': '#0a2f5a'
+            };
+            for (let i = 1; i <= 20; i++) {
+                const themeId = `theme-${i}`;
+                const button = document.createElement('button');
+                button.className = 'theme-preview';
+                if (i === 1) button.classList.add('active');
+                button.dataset.theme = themeId;
+                button.style.background = themeColors[themeId];
+                 if(themeId === 'theme-9') button.style.backgroundImage = 'linear-gradient(#e2e8f0 1px, transparent 1px), linear-gradient(to right, #e2e8f0 1px, transparent 1px)';
+                button.style.backgroundSize = '5px 5px';
+                themeSelector.appendChild(button);
+            }
+        }
+
+        async function generateLeaflet() {
+            leafletOutput.innerHTML = ''; leafletOutput.classList.add('hidden'); printControls.classList.add('hidden'); aiToolsContainer.classList.add('hidden'); errorMessage.textContent = ''; themeSelectorContainer.classList.add('hidden');
+            
+            const serial = parseInt(serialInput.value, 10);
+            if (isNaN(serial) || serial < 1 || serial > 644) { 
+                errorMessage.textContent = 'يرجى إدخال رقم تسلسلي صحيح بين 1 و 644'; 
+                return; 
+            }
+            setLoading(true, 'جاري التحقق...', 10);
+            
+            const student = findStudent(serial);
+            if (!student) { 
+                errorMessage.textContent = 'لم يتم العثور على الطالب بهذا الرقم التسلسلي'; 
+                setLoading(false, '', 0); 
+                return; 
+            }
+            setLoading(true, 'جاري إعداد المطوية...', 30);
+
+            const assignment = findGroupAndTopic(serial);
+            if (!assignment) { 
+                errorMessage.textContent = 'لم يتم العثور على مجموعة لهذا الرقم التسلسلي'; 
+                setLoading(false, '', 0); 
+                return; 
+            }
+            setLoading(true, 'جاري تحميل المحتوى...', 50);
+            
+            const { title, focus, image_prompt, icon_prompt } = assignment.topic;
+            
+             leafletOutput.className = 'theme-1'; // Reset to default theme
+             const leafletHTML = `
+                <div class="leaflet-container max-w-7xl mx-auto border border-gray-200 rounded-lg">
+                    <div class="leaflet-content-wrapper p-4">
+                        <div class="text-center pb-4 border-b-2 border-gray-100 mb-4">
+                            <h2 class="text-2xl font-bold text-sky-800">${title}</h2>
+                            <p class="text-md text-gray-600">${focus}</p>
+                        </div>
+                         <div class="flex flex-wrap justify-between items-center text-sm bg-gray-50 p-3 rounded-md mb-4 text-gray-700 gap-2">
+                            <span><strong>Student:</strong> ${student.name}</span> <span><strong>Serial:</strong> ${serial}</span>
+                            <span><strong>Seat No:</strong> ${student.seatNo}</span> <span><strong>Group:</strong> ${assignment.group}</span>
+                        </div>
+                        <div class="grid grid-cols-1 md:grid-cols-3 leaflet-content">
+                            <div id="content-col-3" class="leaflet-section placeholder"><div class="loader"></div></div>
+                            <div class="leaflet-section">
+                                <div id="image-container" class="mb-4 rounded-lg overflow-hidden placeholder"> <div class="loader"></div> </div>
+                                <div id="content-col-2"><div class="loader mx-auto"></div></div>
+                            </div>
+                            <div id="content-col-1" class="leaflet-section placeholder"><div class="loader"></div></div>
+                        </div>
+                    </div>
+                </div>`;
+            leafletOutput.innerHTML = leafletHTML;
+            leafletOutput.classList.remove('hidden');
+            setLoading(true, 'جاري إنشاء المحتوى...', 70);
+
+            const [textContent, imageUrl, iconUrl] = await Promise.all([
+                generateTextContent(assignment.topic),
+                generateImage(image_prompt),
+                generateImage(icon_prompt)
+            ]);
+            
+            updateTextContent(textContent);
+            setLoading(true, 'جاري تحميل الصور...', 85);
+            updateImage(imageUrl, title);
+            updateIcons(iconUrl, title);
+            setLoading(true, 'يكاد ينتهي...', 95);
+            
+            document.querySelectorAll('.theme-preview').forEach(btn => btn.classList.remove('active'));
+            document.querySelector('.theme-preview[data-theme="theme-1"]').classList.add('active');
+
+
+            printControls.classList.remove('hidden');
+            aiToolsContainer.classList.remove('hidden');
+            themeSelectorContainer.classList.remove('hidden');
+            setLoading(false, '', 100);
+            
+            // Reset progress bar after a delay
+            setTimeout(() => {
+                const progressBar = document.getElementById('progressBar');
+                if (progressBar) {
+                    progressBar.style.width = '0%';
+                }
+            }, 1000);
+        }
+
+        function updateTextContent(content) {
+             const col1 = document.getElementById('content-col-1'); const col2 = document.getElementById('content-col-2'); const col3 = document.getElementById('content-col-3');
+             col1.innerHTML = content.col1; col2.innerHTML = content.col2; col3.innerHTML = content.col3;
+             col1.classList.remove('placeholder'); col3.classList.remove('placeholder');
+        }
+
+        function updateImage(url, title) {
+            const imageContainer = document.getElementById('image-container');
+            if (url) { imageContainer.innerHTML = `<img src="${url}" alt="${title}" class="w-full h-auto object-cover rounded-md shadow-md">`; imageContainer.classList.remove('placeholder'); } else { imageContainer.innerHTML = `<p class="text-red-500 text-center p-4">Could not load image.</p>`; }
+        }
+
+        function updateIcons(url, title) {
+            const headerIcon = document.getElementById('header-icon-container'); const aiToolsIcon = document.getElementById('ai-tools-icon-container');
+            if (url) { const iconHTML = `<img src="${url}" alt="${title} icon" class="w-full h-full object-contain">`; headerIcon.innerHTML = iconHTML; aiToolsIcon.innerHTML = iconHTML; } else { const loaderHTML = `<div class="loader loader-sm"></div>`; headerIcon.innerHTML = loaderHTML; aiToolsIcon.innerHTML = loaderHTML; }
+        }
+        
+        function setListenButtonState(state) {
+            listenBtn.disabled = (state === 'loading' || state === 'playing'); listenSpinner.classList.toggle('hidden', state !== 'loading');
+            switch(state) { case 'playing': listenBtnText.textContent = 'Playing...'; break; case 'loading': listenBtnText.textContent = 'Generating...'; break; case 'error': listenBtnText.textContent = 'Error'; break; default: listenBtnText.textContent = 'Listen to Leaflet'; break; }
+        }
+        
+        async function playLeafletAudio() {
+            if (audioPlayer.paused === false) { audioPlayer.pause(); return; }
+            setListenButtonState('loading');
+            const fullText = [document.getElementById('content-col-1').innerText, document.getElementById('content-col-2').innerText, document.getElementById('content-col-3').innerText].join('\n\n');
+            const payload = { contents: [{ parts: [{ text: `Read the following health information clearly and warmly: ${fullText}` }] }], generationConfig: { responseModalities: ["AUDIO"], speechConfig: { voiceConfig: { prebuiltVoiceConfig: { voiceName: "Puck" } } } } };
+            const result = await callGeminiAPI(payload, 'gemini-2.5-flash-preview-tts');
+            const part = result?.candidates?.[0]?.content?.parts?.[0]; const audioData = part?.inlineData?.data; const mimeType = part?.inlineData?.mimeType;
+            if (audioData && mimeType?.startsWith("audio/")) { const sampleRate = parseInt(mimeType.match(/rate=(\d+)/)[1], 10); const pcmData = base64ToArrayBuffer(audioData); const pcm16 = new Int16Array(pcmData); const wavBlob = pcmToWav(pcm16, sampleRate); const audioUrl = URL.createObjectURL(wavBlob); audioPlayer.src = audioUrl; audioPlayer.play(); setListenButtonState('playing'); } else { console.error("TTS Error: No audio data received", result); setListenButtonState('error'); setTimeout(() => setListenButtonState('idle'), 2000); }
+        }
+
+        async function runAiTool(prompt, title) {
+            modalTitle.textContent = title; modalBody.innerHTML = '<div class="loader mx-auto"></div>'; modal.classList.remove('hidden');
+            const payload = { contents: [{ parts: [{ text: `${prompt}:\n\n${currentLeafletContent}` }] }] };
+            const result = await callGeminiAPI(payload); const text = result?.candidates?.[0]?.content?.parts?.[0]?.text;
+            if (text) { modalBody.innerHTML = text.replace(/\n/g, '<br>'); } else { modalBody.textContent = "Sorry, there was an error. Please try again."; }
+        }
+        
+        // --- EVENT LISTENERS ---
+        document.getElementById('regenerateContentBtn').addEventListener('click', async () => { const cols = ['content-col-1', 'content-col-2', 'content-col-3']; cols.forEach(id => { const el = document.getElementById(id); el.innerHTML = id === 'content-col-2' ? '<div class="loader mx-auto"></div>' : '<div class="loader"></div>'; if(id !== 'content-col-2') el.classList.add('placeholder'); }); const newContent = await generateTextContent(currentTopic); updateTextContent(newContent); });
+        document.getElementById('regenerateImageBtn').addEventListener('click', async () => { const imageContainer = document.getElementById('image-container'); imageContainer.innerHTML = '<div class="loader"></div>'; imageContainer.classList.add('placeholder'); const newUrl = await generateImage(currentTopic.image_prompt); updateImage(newUrl, currentTopic.title); });
+        document.getElementById('simplifyContentBtn').addEventListener('click', () => { runAiTool("Simplify the following medical text for a general audience without a medical background. Keep the core information accurate. Respond in clear, simple paragraphs.", "Simplified Content"); });
+        document.getElementById('generatePointsBtn').addEventListener('click', () => { runAiTool("Summarize the following text into 3-4 key bullet points for a health leaflet. Start each point with a *. Be concise and impactful.", "Key Points"); });
+        
+        themeSelector.addEventListener('click', (e) => {
+            const themeButton = e.target.closest('[data-theme]');
+            if (themeButton) {
+                const theme = themeButton.dataset.theme;
+                const leafletWrapper = document.getElementById('leafletOutput');
+                leafletWrapper.className = leafletWrapper.className.replace(/\btheme-\S+/g, '');
+                leafletWrapper.classList.add(theme);
+                
+                document.querySelectorAll('.theme-preview').forEach(btn => btn.classList.remove('active'));
+                themeButton.classList.add('active');
+            }
+        });
+
+        downloadPdfBtn.addEventListener('click', async () => {
+            const element = document.querySelector('#leafletOutput .leaflet-container');
+            if (!element) {
+                errorMessage.textContent = 'لا توجد مطوية لتحميلها';
+                return;
+            }
+            
+            // Show loading state
+            const originalText = downloadPdfBtn.innerHTML;
+            downloadPdfBtn.innerHTML = '<i class="fas fa-spinner fa-spin ml-2"></i> جاري إنشاء PDF...';
+            downloadPdfBtn.disabled = true;
+            
+            try {
+                const studentName = students.find(s => s.serial == serialInput.value)?.name || 'student';
+                const filename = `${currentTopic.title.replace(/ /g, '_')}_${studentName.replace(/ /g, '_')}.pdf`;
+                
+                // Enhanced options for better PDF generation
+                const opt = {
+                    margin:       [10, 10, 10, 10],
+                    filename:     filename,
+                    image:        { 
+                        type: 'jpeg', 
+                        quality: 0.98 
+                    },
+                    html2canvas:  { 
+                        scale: 2,
+                        useCORS: true,
+                        letterRendering: true,
+                        logging: false,
+                        width: element.scrollWidth,
+                        height: element.scrollHeight,
+                        windowWidth: element.scrollWidth,
+                        windowHeight: element.scrollHeight,
+                        onclone: function(clonedDoc) {
+                            // Ensure all content is visible in the clone
+                            const clonedElement = clonedDoc.querySelector('#leafletOutput .leaflet-container');
+                            if (clonedElement) {
+                                clonedElement.style.display = 'block';
+                                clonedElement.style.visibility = 'visible';
+                            }
+                        }
+                    },
+                    jsPDF:        { 
+                        unit: 'mm', 
+                        format: 'a4', 
+                        orientation: 'landscape',
+                        compress: true
+                    },
+                    pagebreak: { 
+                        mode: ['avoid-all', 'css', 'legacy'] 
+                    }
+                };
+                
+                // Wait for images to load
+                await ensureImagesLoaded(element);
+                
+                // Generate PDF
+                await html2pdf().set(opt).from(element).save();
+                
+            } catch (error) {
+                console.error('PDF generation error:', error);
+                errorMessage.textContent = 'حدث خطأ في إنشاء PDF. يرجى المحاولة مرة أخرى.';
+            } finally {
+                downloadPdfBtn.innerHTML = originalText;
+                downloadPdfBtn.disabled = false;
+            }
+        });
+        
+        // Helper function to ensure images are loaded
+        async function ensureImagesLoaded(element) {
+            const images = element.querySelectorAll('img');
+            const promises = Array.from(images).map(img => {
+                if (img.complete) return Promise.resolve();
+                return new Promise((resolve, reject) => {
+                    img.onload = resolve;
+                    img.onerror = resolve; // Resolve even on error to not block PDF generation
+                    setTimeout(resolve, 5000); // Timeout after 5 seconds
+                });
+            });
+            await Promise.all(promises);
+        }
+
+        listenBtn.addEventListener('click', playLeafletAudio);
+        audioPlayer.addEventListener('ended', () => setListenButtonState('idle'));
+        audioPlayer.addEventListener('pause', () => { audioPlayer.currentTime = 0; setListenButtonState('idle'); });
+        
+        closeModalBtn.addEventListener('click', () => modal.classList.add('hidden'));
+        modal.addEventListener('click', (e) => { if(e.target === modal) modal.classList.add('hidden'); });
+        generateButton.addEventListener('click', generateLeaflet);
+        serialInput.addEventListener('keydown', (e) => { if (e.key === 'Enter') generateLeaflet(); });
+
+        // Initial setup
+        setupThemeSelector();
+
+    </script>
+</body>
+</html>
+

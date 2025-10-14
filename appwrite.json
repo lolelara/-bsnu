@@ -1,0 +1,127 @@
+{
+  "projectId": "phc-leaflet-generator",
+  "projectName": "PHC Leaflet Generator",
+  "functions": [
+    {
+      "$id": "generate-leaflet",
+      "name": "Generate Leaflet Content",
+      "runtime": "node-18.0",
+      "execute": ["any"],
+      "events": [],
+      "schedule": "",
+      "timeout": 15,
+      "enabled": true,
+      "logging": true,
+      "entrypoint": "src/index.js",
+      "commands": "npm install",
+      "ignore": ["node_modules", ".npm"],
+      "path": "functions/generate-leaflet"
+    }
+  ],
+  "collections": [
+    {
+      "$id": "students",
+      "name": "Students",
+      "enabled": true,
+      "documentSecurity": false,
+      "attributes": [
+        {
+          "key": "serial",
+          "type": "integer",
+          "required": true,
+          "min": 1,
+          "max": 644
+        },
+        {
+          "key": "name",
+          "type": "string",
+          "required": true,
+          "size": 255
+        },
+        {
+          "key": "seatNo",
+          "type": "string",
+          "required": true,
+          "size": 50
+        },
+        {
+          "key": "group",
+          "type": "integer",
+          "required": true,
+          "min": 1,
+          "max": 19
+        }
+      ],
+      "indexes": [
+        {
+          "key": "serial_index",
+          "type": "unique",
+          "attributes": ["serial"]
+        },
+        {
+          "key": "group_index",
+          "type": "key",
+          "attributes": ["group"]
+        }
+      ]
+    },
+    {
+      "$id": "leaflets",
+      "name": "Generated Leaflets",
+      "enabled": true,
+      "documentSecurity": false,
+      "attributes": [
+        {
+          "key": "studentSerial",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "key": "topicId",
+          "type": "integer",
+          "required": true
+        },
+        {
+          "key": "content",
+          "type": "string",
+          "required": true,
+          "size": 10000
+        },
+        {
+          "key": "imageUrl",
+          "type": "url",
+          "required": false
+        },
+        {
+          "key": "createdAt",
+          "type": "datetime",
+          "required": true
+        }
+      ]
+    }
+  ],
+  "storage": {
+    "buckets": [
+      {
+        "$id": "leaflet-images",
+        "name": "Leaflet Images",
+        "enabled": true,
+        "maximumFileSize": 10485760,
+        "allowedFileExtensions": ["jpg", "jpeg", "png", "gif", "webp"],
+        "compression": "gzip",
+        "encryption": true,
+        "antivirus": true
+      },
+      {
+        "$id": "generated-pdfs",
+        "name": "Generated PDFs",
+        "enabled": true,
+        "maximumFileSize": 52428800,
+        "allowedFileExtensions": ["pdf"],
+        "compression": "gzip",
+        "encryption": true,
+        "antivirus": true
+      }
+    ]
+  }
+}
