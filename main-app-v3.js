@@ -222,10 +222,10 @@ async function generateTextContent(topic, focusPoints = '') {
         prompt += `\n\nIMPORTANT: Please emphasize and focus on these specific aspects: ${focusPoints}`;
     }
     
-    const systemPrompt = `You are a medical content writer specializing in Primary Health Care education. 
-Create clear, evidence-based, patient-friendly content for health leaflets. 
-Use proper HTML formatting with headings (h3, h4), paragraphs (p), lists (ul/ol), and emphasis where appropriate.
-Keep content concise but comprehensive. Use simple English that non-medical audiences can understand.`;
+    const systemPrompt = `You are a medical content writer creating simple health leaflets. 
+Create very short, clear content for health education. 
+Use simple HTML formatting with headings (h3), paragraphs (p), and bullet points (ul).
+Keep content very brief (maximum 100 words). Use simple English.`;
     
     const content = await callGeminiAPI(prompt, systemPrompt);
     appState.generatedContent = content;
