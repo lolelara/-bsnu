@@ -17,18 +17,25 @@ if (typeof window !== 'undefined') {
         // Wait a moment for the page to fully load
         setTimeout(function() {
             // Check if we're on the main application page
-            if (document.getElementById('geminiApiKey')) {
+            const geminiInput = document.getElementById('geminiApiKey');
+            if (geminiInput) {
                 // Load preset configuration into fields
-                document.getElementById('geminiApiKey').value = presetConfig.geminiApiKey;
-                document.getElementById('appwriteEndpoint').value = presetConfig.appwrite.endpoint;
-                document.getElementById('appwriteProject').value = presetConfig.appwrite.projectId;
+                geminiInput.value = presetConfig.geminiApiKey;
                 
-                if (presetConfig.appwrite.databaseId) {
-                    document.getElementById('appwriteDatabase').value = presetConfig.appwrite.databaseId;
+                const endpointInput = document.getElementById('appwriteEndpoint');
+                if (endpointInput) endpointInput.value = presetConfig.appwrite.endpoint;
+                
+                const projectInput = document.getElementById('appwriteProject');
+                if (projectInput) projectInput.value = presetConfig.appwrite.projectId;
+                
+                const dbInput = document.getElementById('appwriteDatabase');
+                if (dbInput && presetConfig.appwrite.databaseId) {
+                    dbInput.value = presetConfig.appwrite.databaseId;
                 }
                 
-                if (presetConfig.appwrite.collectionId) {
-                    document.getElementById('appwriteCollection').value = presetConfig.appwrite.collectionId;
+                const collInput = document.getElementById('appwriteCollection');
+                if (collInput && presetConfig.appwrite.collectionId) {
+                    collInput.value = presetConfig.appwrite.collectionId;
                 }
                 
                 // Auto-save configuration immediately
@@ -36,7 +43,7 @@ if (typeof window !== 'undefined') {
                     saveConfiguration();
                 }
             }
-        }, 500); // Wait 500ms for everything to load
+        }, 1000); // Wait 1 second for everything to load
     });
 }
 

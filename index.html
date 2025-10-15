@@ -448,7 +448,7 @@
         </div>
 
         <!-- Configuration Section - HIDDEN (Auto-configured) -->
-        <div class="glass-card" style="display: none;">
+        <div class="glass-card" id="configSection" style="display: none;">
             <h2 style="font-size: 1.8rem; margin-bottom: 20px; color: #1f2937;">
                 <i class="fas fa-cog"></i> Configuration
             </h2>
@@ -471,7 +471,21 @@
                 </div>
 
                 <div class="input-group">
-                    <label>
+                    <label><i class="fas fa-database"></i> Database ID</label>
+                    <input type="text" id="appwriteDatabase" placeholder="Your database ID">
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fas fa-folder"></i> Collection ID</label>
+                    <input type="text" id="appwriteCollection" placeholder="Your collection ID">
+                </div>
+            </div>
+
+            <button class="btn btn-secondary" onclick="saveConfiguration()" style="margin-top: 20px;">
+                <i class="fas fa-save"></i> Save Configuration
+            </button>
+            <div id="config-message"></div>
+        </div>
 
         <!-- Student Input Section -->
         <div class="glass-card">
