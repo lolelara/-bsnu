@@ -181,7 +181,7 @@ function selectTemplate(templateNum) {
 // GEMINI API INTEGRATION
 // ============================================
 
-async function callGeminiAPI(prompt, systemPrompt = '', model = 'gemini-1.5-flash') {
+async function callGeminiAPI(prompt, systemPrompt = '', model = 'gemini-1.5-flash-latest') {
     if (!appState.geminiApiKey) {
         throw new Error('Gemini API key not configured');
     }
