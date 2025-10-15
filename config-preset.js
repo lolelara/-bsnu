@@ -2,7 +2,7 @@
 // This file contains the configuration that will be automatically loaded
 
 const presetConfig = {
-    geminiApiKey: 'AIzaSyD_oeBjDd-X6dMv2fhT7j0tsYc0BFXiaqs',
+    geminiApiKey: 'AIzaSyAh6ybMnIqmQCzlOqJvKJzIi76D8vIi-Ls',
     appwrite: {
         endpoint: 'https://cloud.appwrite.io/v1',
         projectId: '68eeea7c0008fe656dc0',
