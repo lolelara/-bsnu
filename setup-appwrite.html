@@ -1,0 +1,428 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Appwrite Auto-Setup - PHC Leaflet Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+    
+    <style>
+        body {
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 900px;
+            margin: 0 auto;
+        }
+
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
+            margin-bottom: 20px;
+        }
+
+        .header {
+            text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-size: 2.5rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+        }
+
+        .log-area {
+            background: #1f2937;
+            color: #10b981;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+            max-height: 400px;
+            overflow-y: auto;
+            margin-top: 20px;
+        }
+
+        .log-entry {
+            margin-bottom: 8px;
+            padding: 4px 0;
+        }
+
+        .log-success { color: #10b981; }
+        .log-error { color: #ef4444; }
+        .log-info { color: #3b82f6; }
+        .log-warning { color: #f59e0b; }
+
+        .btn {
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-weight: 600;
+            cursor: pointer;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            transition: all 0.3s;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+        }
+
+        .input-group input:focus {
+            outline: none;
+            border-color: #667eea;
+        }
+
+        .config-display {
+            background: #f3f4f6;
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            display: none;
+        }
+
+        .config-display.show {
+            display: block;
+        }
+
+        .config-item {
+            margin-bottom: 10px;
+            padding: 10px;
+            background: white;
+            border-radius: 5px;
+            border-left: 4px solid #10b981;
+        }
+
+        .config-item strong {
+            color: #1f2937;
+        }
+
+        .config-item code {
+            background: #1f2937;
+            color: #10b981;
+            padding: 2px 8px;
+            border-radius: 4px;
+            font-family: 'Courier New', monospace;
+            font-size: 14px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <h1><i class="fas fa-database"></i> Appwrite Auto-Setup</h1>
+            <p>Automated Database Configuration for PHC Leaflet Generator</p>
+        </div>
+
+        <div class="card">
+            <h2 style="font-size: 1.8rem; margin-bottom: 20px; color: #1f2937;">
+                <i class="fas fa-cog"></i> Configuration
+            </h2>
+            
+            <div class="input-group">
+                <label><i class="fas fa-server"></i> Appwrite Endpoint</label>
+                <input type="text" id="endpoint" value="https://cloud.appwrite.io/v1" placeholder="https://cloud.appwrite.io/v1">
+                <small style="color: #6b7280; margin-top: 5px; display: block;">Usually https://cloud.appwrite.io/v1 for Appwrite Cloud</small>
+            </div>
+
+            <div class="input-group">
+                <label><i class="fas fa-key"></i> API Key</label>
+                <input type="password" id="apiKey" value="standard_4254c26eb3d99887769c3de02274c654696968aa2bad1f354ed00e968b945cc17e299bc1f554752812c6d00606ea45975d8b6c2d8be796cb9ce69da37214fbaa87373343a9d899432f28d72b20de3aa7f007121b78e9b0dfc911023570f0db22f9fbd5f0b3fbd29d74007429c4f99888509b5eeaf9e75e9eb2230f9d23998c2c" placeholder="Your Appwrite API Key">
+                <small style="color: #10b981; margin-top: 5px; display: block; font-weight: 600;">
+                    ✓ Pre-configured - Ready to use!
+                </small>
+            </div>
+
+            <div class="input-group">
+                <label><i class="fas fa-project-diagram"></i> Project ID</label>
+                <input type="text" id="projectId" value="68eeea7c0008fe656dc0" placeholder="Your Project ID">
+                <small style="color: #10b981; margin-top: 5px; display: block; font-weight: 600;">
+                    ✓ Pre-configured - Ready to use!
+                </small>
+            </div>
+
+            <div style="text-align: center; margin-top: 30px;">
+                <button class="btn btn-primary" onclick="startSetup()" id="setupBtn">
+                    <i class="fas fa-rocket"></i> Start Automatic Setup
+                </button>
+            </div>
+
+            <div class="log-area" id="logArea">
+                <div class="log-entry log-info">
+                    <i class="fas fa-info-circle"></i> Ready to start setup...
+                </div>
+            </div>
+
+            <div class="config-display" id="configDisplay">
+                <h3 style="margin-bottom: 15px; color: #1f2937;">
+                    <i class="fas fa-check-circle" style="color: #10b981;"></i> Setup Complete! Use these IDs:
+                </h3>
+                <div id="configDetails"></div>
+                <div style="margin-top: 20px; padding: 15px; background: #dbeafe; border-radius: 8px;">
+                    <p style="color: #1e40af; font-weight: 600;">
+                        <i class="fas fa-lightbulb"></i> Next Steps:
+                    </p>
+                    <ol style="margin-left: 20px; margin-top: 10px; color: #1e40af;">
+                        <li>Copy the IDs above</li>
+                        <li>Open <strong>index.html</strong> in your browser</li>
+                        <li>Paste these IDs in the Configuration section</li>
+                        <li>Add your Gemini API key</li>
+                        <li>Start generating leaflets!</li>
+                    </ol>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        let client, databases;
+        const setupState = {
+            databaseId: null,
+            collectionId: null
+        };
+
+        function log(message, type = 'info') {
+            const logArea = document.getElementById('logArea');
+            const entry = document.createElement('div');
+            entry.className = `log-entry log-${type}`;
+            
+            const icon = type === 'success' ? 'check-circle' : 
+                        type === 'error' ? 'exclamation-circle' : 
+                        type === 'warning' ? 'exclamation-triangle' : 'info-circle';
+            
+            entry.innerHTML = `<i class="fas fa-${icon}"></i> ${message}`;
+            logArea.appendChild(entry);
+            logArea.scrollTop = logArea.scrollHeight;
+        }
+
+        async function startSetup() {
+            const endpoint = document.getElementById('endpoint').value.trim();
+            const apiKey = document.getElementById('apiKey').value.trim();
+            const projectId = document.getElementById('projectId').value.trim();
+
+            if (!endpoint || !apiKey || !projectId) {
+                alert('Please fill in all fields');
+                return;
+            }
+
+            const btn = document.getElementById('setupBtn');
+            btn.disabled = true;
+            btn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Setting up...';
+
+            document.getElementById('logArea').innerHTML = '';
+            document.getElementById('configDisplay').classList.remove('show');
+
+            try {
+                log('Initializing Appwrite SDK...', 'info');
+                
+                const { Client, Databases, ID, Permission, Role } = Appwrite;
+                client = new Client()
+                    .setEndpoint(endpoint)
+                    .setProject(projectId)
+                    .setKey(apiKey);
+                
+                databases = new Databases(client);
+                log('✓ Appwrite SDK initialized', 'success');
+
+                // Create Database
+                log('Creating database "leaflets_db"...', 'info');
+                try {
+                    const database = await databases.create(
+                        ID.unique(),
+                        'leaflets_db'
+                    );
+                    setupState.databaseId = database.$id;
+                    log(`✓ Database created: ${database.$id}`, 'success');
+                } catch (error) {
+                    if (error.code === 409) {
+                        log('Database already exists, using existing one...', 'warning');
+                        const dbList = await databases.list();
+                        const existing = dbList.databases.find(db => db.name === 'leaflets_db');
+                        if (existing) {
+                            setupState.databaseId = existing.$id;
+                            log(`✓ Using existing database: ${existing.$id}`, 'success');
+                        } else {
+                            throw new Error('Could not find or create database');
+                        }
+                    } else {
+                        throw error;
+                    }
+                }
+
+                // Create Collection
+                log('Creating collection "leaflets"...', 'info');
+                try {
+                    const collection = await databases.createCollection(
+                        setupState.databaseId,
+                        ID.unique(),
+                        'leaflets',
+                        [
+                            Permission.read(Role.any()),
+                            Permission.create(Role.any()),
+                            Permission.update(Role.any()),
+                            Permission.delete(Role.any())
+                        ]
+                    );
+                    setupState.collectionId = collection.$id;
+                    log(`✓ Collection created: ${collection.$id}`, 'success');
+                } catch (error) {
+                    if (error.code === 409) {
+                        log('Collection already exists, using existing one...', 'warning');
+                        const collList = await databases.listCollections(setupState.databaseId);
+                        const existing = collList.collections.find(c => c.name === 'leaflets');
+                        if (existing) {
+                            setupState.collectionId = existing.$id;
+                            log(`✓ Using existing collection: ${existing.$id}`, 'success');
+                        } else {
+                            throw new Error('Could not find or create collection');
+                        }
+                    } else {
+                        throw error;
+                    }
+                }
+
+                // Create Attributes
+                log('Creating attributes...', 'info');
+                
+                const attributes = [
+                    { key: 'studentSerial', type: 'integer', required: true },
+                    { key: 'studentName', type: 'string', size: 255, required: true },
+                    { key: 'studentSeatNo', type: 'string', size: 50, required: true },
+                    { key: 'studentGroup', type: 'integer', required: true },
+                    { key: 'topicTitle', type: 'string', size: 255, required: true },
+                    { key: 'topicSubtitle', type: 'string', size: 255, required: true },
+                    { key: 'content', type: 'string', size: 65535, required: true },
+                    { key: 'imageUrl', type: 'string', size: 2048, required: false },
+                    { key: 'templateNumber', type: 'integer', required: true },
+                    { key: 'generatedAt', type: 'string', size: 50, required: true }
+                ];
+
+                for (const attr of attributes) {
+                    try {
+                        log(`  Creating attribute: ${attr.key}...`, 'info');
+                        
+                        if (attr.type === 'integer') {
+                            await databases.createIntegerAttribute(
+                                setupState.databaseId,
+                                setupState.collectionId,
+                                attr.key,
+                                attr.required
+                            );
+                        } else if (attr.type === 'string') {
+                            await databases.createStringAttribute(
+                                setupState.databaseId,
+                                setupState.collectionId,
+                                attr.key,
+                                attr.size,
+                                attr.required
+                            );
+                        }
+                        
+                        log(`  ✓ Attribute ${attr.key} created`, 'success');
+                        
+                        // Wait a bit between attribute creations
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                        
+                    } catch (error) {
+                        if (error.code === 409) {
+                            log(`  ~ Attribute ${attr.key} already exists`, 'warning');
+                        } else {
+                            log(`  ✗ Error creating ${attr.key}: ${error.message}`, 'error');
+                        }
+                    }
+                }
+
+                log('✓ All attributes processed', 'success');
+                log('', 'info');
+                log('🎉 Setup Complete!', 'success');
+                log('', 'info');
+                log('Waiting for attributes to be ready (this may take a few seconds)...', 'info');
+
+                // Wait for attributes to be ready
+                await new Promise(resolve => setTimeout(resolve, 3000));
+
+                // Display configuration
+                displayConfiguration(endpoint, projectId, setupState.databaseId, setupState.collectionId);
+
+            } catch (error) {
+                log(`✗ Setup failed: ${error.message}`, 'error');
+                console.error('Setup error:', error);
+            } finally {
+                btn.disabled = false;
+                btn.innerHTML = '<i class="fas fa-rocket"></i> Start Automatic Setup';
+            }
+        }
+
+        function displayConfiguration(endpoint, projectId, databaseId, collectionId) {
+            const configDisplay = document.getElementById('configDisplay');
+            const configDetails = document.getElementById('configDetails');
+
+            const html = `
+                <div class="config-item">
+                    <strong>Appwrite Endpoint:</strong><br>
+                    <code>${endpoint}</code>
+                </div>
+                <div class="config-item">
+                    <strong>Project ID:</strong><br>
+                    <code>${projectId}</code>
+                </div>
+                <div class="config-item">
+                    <strong>Database ID:</strong><br>
+                    <code>${databaseId}</code>
+                </div>
+                <div class="config-item">
+                    <strong>Collection ID:</strong><br>
+                    <code>${collectionId}</code>
+                </div>
+            `;
+
+            configDetails.innerHTML = html;
+            configDisplay.classList.add('show');
+
+            log('Copy the IDs above and use them in the main application', 'info');
+        }
+    </script>
+</body>
+</html>
+

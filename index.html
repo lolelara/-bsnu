@@ -1,350 +1,674 @@
 <!DOCTYPE html>
-<html lang="ar" dir="rtl">
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>مولد المطويات الصحية - PHC</title>
-    
-    <!-- Tailwind CSS -->
+    <title>PHC Leaflet Generator - BSNU 3rd Year</title>
     <script src="https://cdn.tailwindcss.com"></script>
-    
-    <!-- PDF Library -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
     <script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
-    
-    <!-- Appwrite SDK -->
-    <script src="https://cdn.jsdelivr.net/npm/appwrite@14.0.1"></script>
-    
-    <!-- Fonts -->
-    <link rel="preconnect" href="https://fonts.googleapis.com">
-    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
-    <link href="https://fonts.googleapis.com/css2?family=Cairo:wght@400;600;700&family=Readex+Pro:wght@400;600;700&family=Roboto:wght@400;700&family=Lora:wght@400;700&family=Montserrat:wght@400;700&display=swap" rel="stylesheet">
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
     
     <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
         body {
-            font-family: 'Cairo', 'Readex Pro', sans-serif;
-            background-color: #f0f7ff;
-        }
-        
-        .leaflet-container {
-            box-shadow: 0 10px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
-            position: relative;
-            overflow: hidden;
-            transition: background 0.5s ease, color 0.5s ease;
-        }
-        
-        .leaflet-content-wrapper {
-            position: relative;
-            z-index: 1;
-        }
-        
-        .leaflet-section {
-            padding: 1.5rem;
-            height: 100%;
-            display: flex;
-            flex-direction: column;
-            transition: border-color 0.5s ease;
-        }
-        
-        .leaflet-content h3 {
-            transition: color 0.5s ease, border-color 0.5s ease;
-        }
-        
-        .leaflet-content h4 {
-            transition: color 0.5s ease;
-        }
-        
-        /* Theme 1: Default Professional Blue */
-        .theme-1 .leaflet-container { background-color: #ffffff; }
-        .theme-1 .leaflet-container::before { content: ''; position: absolute; top: -50px; left: -50px; width: 200px; height: 200px; background: #e0f2fe; opacity: 0.5; transform: rotate(45deg); z-index: 0; border-radius: 30px; }
-        .theme-1 .leaflet-container::after { content: ''; position: absolute; bottom: -80px; right: -80px; width: 250px; height: 250px; background: #f0fdf4; opacity: 0.6; transform: rotate(-30deg); z-index: 0; border-radius: 40px; }
-        .theme-1 .leaflet-section:not(:last-child) { border-right: 2px dashed #dbeafe; }
-        .theme-1 .leaflet-content h3 { font-weight: 700; font-size: 1.1rem; color: #0c4a6e; margin-bottom: 0.75rem; padding-bottom: 0.25rem; border-bottom: 2px solid #38bdf8; }
-        .theme-1 .leaflet-content h4 { font-weight: 600; font-size: 1rem; color: #075985; margin-top: 1rem; margin-bottom: 0.5rem; }
-
-        /* Theme 2: Warm & Friendly */
-        .theme-2 .leaflet-container { background-color: #fffbeb; }
-        .theme-2 .leaflet-section:not(:last-child) { border-right: 2px dashed #fef3c7; }
-        .theme-2 .leaflet-content h3 { color: #b45309; border-bottom-color: #f59e0b; }
-        .theme-2 .leaflet-content h4 { color: #d97706; }
-
-        /* Theme 3: Clinical Minimalist */
-        .theme-3 .leaflet-container { background-color: #f9fafb; }
-        .theme-3 .leaflet-section:not(:last-child) { border-right: 1px solid #e5e7eb; }
-        .theme-3 .leaflet-content h3 { font-family: 'Montserrat', sans-serif; color: #111827; border-bottom-color: #6b7280; }
-        .theme-3 .leaflet-content h4 { font-family: 'Montserrat', sans-serif; color: #374151; }
-
-        /* Theme 4: Natural & Organic */
-        .theme-4 .leaflet-container { background-color: #f0fdf4; }
-        .theme-4 .leaflet-section:not(:last-child) { border-right: 2px dashed #bbf7d0; }
-        .theme-4 .leaflet-content h3 { font-family: 'Lora', serif; color: #14532d; border-bottom-color: #22c55e; }
-        .theme-4 .leaflet-content h4 { font-family: 'Lora', serif; color: #166534; }
-
-        /* Theme 5: Modern Dark */
-        .theme-5 .leaflet-container { background-color: #1f2937; color: #d1d5db; }
-        .theme-5 .leaflet-section:not(:last-child) { border-right: 2px dashed #4b5563; }
-        .theme-5 .leaflet-content h3 { color: #60a5fa; border-bottom-color: #60a5fa; }
-        .theme-5 .leaflet-content h4 { color: #93c5fd; }
-        .theme-5 .leaflet-content p, .theme-5 .leaflet-content ul { color: #d1d5db; }
-        .theme-5 .leaflet-container .bg-gray-50 { background-color: #374151 !important; }
-        .theme-5 .leaflet-container .text-gray-700 { color: #f9fafb !important; }
-        .theme-5 .leaflet-container .text-gray-600 { color: #d1d5db !important; }
-
-        @media print {
-            @page { size: A4 landscape; margin: 0.5cm; }
-            body, html { width: 100%; height: 100%; background-color: #ffffff !important; }
-            body, body * { background-color: #ffffff !important; -webkit-print-color-adjust: exact; print-color-adjust: exact; }
-            body * { visibility: hidden; }
-            #leafletOutput, #leafletOutput * { visibility: visible; }
-            #leafletOutput { position: absolute; left: 0; top: 0; width: 100%; height: 100%; display: flex; align-items: center; justify-content: center; }
-            .leaflet-container { width: 28.7cm; height: 19cm; box-shadow: none; border: 1px solid #ccc; margin: 0; padding: 0; }
-            .grid.leaflet-content { height: calc(100% - 120px); }
-            .leaflet-container::before, .leaflet-container::after { display: none; }
-            #controls, #header-title, #footer-note, #print-controls, #ai-tools-container, #theme-selector-container, #saved-leaflets { display: none; }
+            font-family: 'Inter', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
         }
 
-        .loader { 
-            border: 5px solid #f3f3f3; 
-            border-top: 5px solid #0ea5e9; 
-            border-radius: 50%; 
-            width: 50px; 
-            height: 50px; 
-            animation: spin 1s linear infinite; 
-        }
-        
-        .loader-sm { 
-            border: 2px solid #f3f3f3; 
-            border-top: 2px solid #0ea5e9; 
-            width: 20px; 
-            height: 20px; 
-        }
-        
-        @keyframes spin { 
-            0% { transform: rotate(0deg); } 
-            100% { transform: rotate(360deg); } 
-        }
-        
-        .placeholder { 
-            background-color: #f8fafc; 
-            border: 2px dashed #e2e8f0; 
-            display: flex; 
-            flex-direction: column; 
-            align-items: center; 
-            justify-content: center; 
-            min-height: 200px; 
-            border-radius: 0.5rem; 
-        }
-        
-        .modal-overlay { 
-            position: fixed; 
-            top: 0; 
-            left: 0; 
-            right: 0; 
-            bottom: 0; 
-            background-color: rgba(0, 0, 0, 0.6); 
-            display: flex; 
-            align-items: center; 
-            justify-content: center; 
-            z-index: 1000; 
-        }
-        
-        .modal-content { 
-            background-color: white; 
-            padding: 2rem; 
-            border-radius: 0.5rem; 
-            width: 90%; 
-            max-width: 600px; 
-            max-height: 80vh; 
-            overflow-y: auto; 
-        }
-        
-        .spinner-sm { 
-            width: 1rem; 
-            height: 1rem; 
-            border-width: 2px; 
-            animation: spin .5s linear infinite; 
-        }
-        
-        .theme-preview { 
-            width: 40px; 
-            height: 40px; 
-            border-radius: 0.5rem; 
-            cursor: pointer; 
-            border: 2px solid transparent; 
-            transition: all 0.2s ease; 
-        }
-        
-        .theme-preview:hover, .theme-preview.active { 
-            border-color: #0ea5e9; 
-            transform: scale(1.1); 
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
         }
 
-        .success-message {
-            background-color: #d1fae5;
-            color: #065f46;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            margin-top: 1rem;
+        .glass-card {
+            background: rgba(255, 255, 255, 0.95);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.1);
+            margin-bottom: 20px;
+        }
+
+        .header {
             text-align: center;
+            color: white;
+            margin-bottom: 30px;
+        }
+
+        .header h1 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 3rem;
+            font-weight: 700;
+            margin-bottom: 10px;
+            text-shadow: 2px 2px 4px rgba(0,0,0,0.2);
+        }
+
+        .header p {
+            font-size: 1.2rem;
+            opacity: 0.95;
+        }
+
+        .input-group {
+            margin-bottom: 20px;
+        }
+
+        .input-group label {
+            display: block;
+            margin-bottom: 8px;
+            font-weight: 600;
+            color: #374151;
+        }
+
+        .input-group input,
+        .input-group select,
+        .input-group textarea {
+            width: 100%;
+            padding: 12px 16px;
+            border: 2px solid #e5e7eb;
+            border-radius: 10px;
+            font-size: 16px;
+            transition: all 0.3s;
+        }
+
+        .input-group input:focus,
+        .input-group select:focus,
+        .input-group textarea:focus {
+            outline: none;
+            border-color: #667eea;
+            box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+        }
+
+        .btn {
+            padding: 14px 32px;
+            border-radius: 10px;
+            font-weight: 600;
+            font-size: 16px;
+            cursor: pointer;
+            transition: all 0.3s;
+            border: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            justify-content: center;
+        }
+
+        .btn-primary {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+        }
+
+        .btn-primary:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(102, 126, 234, 0.3);
+        }
+
+        .btn-primary:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+            transform: none;
+        }
+
+        .btn-secondary {
+            background: #10b981;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #059669;
+            transform: translateY(-2px);
+            box-shadow: 0 10px 20px rgba(16, 185, 129, 0.3);
+        }
+
+        .btn-danger {
+            background: #ef4444;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #dc2626;
+        }
+
+        .btn-info {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-info:hover {
+            background: #2563eb;
+        }
+
+        .spinner {
+            width: 20px;
+            height: 20px;
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-top-color: white;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .template-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(250px, 1fr));
+            gap: 20px;
+            margin-top: 20px;
+        }
+
+        .template-card {
+            border: 3px solid #e5e7eb;
+            border-radius: 15px;
+            padding: 20px;
+            cursor: pointer;
+            transition: all 0.3s;
+            text-align: center;
+            background: white;
+        }
+
+        .template-card:hover {
+            border-color: #667eea;
+            transform: translateY(-5px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.2);
+        }
+
+        .template-card.active {
+            border-color: #667eea;
+            background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+        }
+
+        .template-preview {
+            width: 100%;
+            height: 150px;
+            background: #f3f4f6;
+            border-radius: 10px;
+            margin-bottom: 15px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 48px;
+            color: #9ca3af;
+        }
+
+        .leaflet-output {
+            display: none;
+            margin-top: 30px;
+            animation: fadeIn 0.5s;
+        }
+
+        .leaflet-output.show {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        .leaflet-container {
+            background: white;
+            border-radius: 15px;
+            padding: 40px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .leaflet-header {
+            text-align: center;
+            margin-bottom: 30px;
+            padding-bottom: 20px;
+            border-bottom: 3px solid #e5e7eb;
+        }
+
+        .leaflet-header h2 {
+            font-family: 'Poppins', sans-serif;
+            font-size: 2.5rem;
+            color: #1f2937;
+            margin-bottom: 10px;
+        }
+
+        .leaflet-header .subtitle {
+            font-size: 1.3rem;
+            color: #6b7280;
+            font-weight: 500;
+        }
+
+        .student-info {
+            background: linear-gradient(135deg, #f3f4f6 0%, #e5e7eb 100%);
+            padding: 20px;
+            border-radius: 10px;
+            margin-bottom: 30px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+        }
+
+        .student-info-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .student-info-item i {
+            color: #667eea;
+            font-size: 20px;
+        }
+
+        .student-info-item strong {
+            color: #374151;
+        }
+
+        .leaflet-content {
+            line-height: 1.8;
+            color: #374151;
+        }
+
+        .leaflet-content h3 {
+            color: #1f2937;
+            font-size: 1.5rem;
+            margin-top: 25px;
+            margin-bottom: 15px;
+            font-weight: 700;
+        }
+
+        .leaflet-content h4 {
+            color: #374151;
+            font-size: 1.2rem;
+            margin-top: 20px;
+            margin-bottom: 10px;
             font-weight: 600;
         }
 
-        .saved-item {
-            background: white;
-            padding: 1rem;
-            border-radius: 0.5rem;
-            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
-            margin-bottom: 0.5rem;
-            cursor: pointer;
-            transition: all 0.2s;
+        .leaflet-content p {
+            margin-bottom: 15px;
         }
 
-        .saved-item:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.15);
+        .leaflet-content ul, .leaflet-content ol {
+            margin-left: 25px;
+            margin-bottom: 15px;
+        }
+
+        .leaflet-content li {
+            margin-bottom: 8px;
+        }
+
+        .leaflet-image {
+            width: 100%;
+            border-radius: 15px;
+            margin: 25px 0;
+            box-shadow: 0 5px 20px rgba(0, 0, 0, 0.1);
+        }
+
+        .action-buttons {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 15px;
+            margin-top: 30px;
+            justify-content: center;
+        }
+
+        .alert {
+            padding: 15px 20px;
+            border-radius: 10px;
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+
+        .alert-success {
+            background: #d1fae5;
+            color: #065f46;
+            border: 2px solid #10b981;
+        }
+
+        .alert-error {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 2px solid #ef4444;
+        }
+
+        .alert-info {
+            background: #dbeafe;
+            color: #1e40af;
+            border: 2px solid #3b82f6;
+        }
+
+        .hidden {
+            display: none !important;
+        }
+
+        /* Template Styles */
+        .template-1 .leaflet-content { column-count: 3; column-gap: 30px; }
+        .template-2 .leaflet-content { column-count: 2; column-gap: 40px; }
+        .template-3 .leaflet-content { display: grid; grid-template-columns: 2fr 1fr; gap: 30px; }
+        .template-4 .leaflet-content { display: flex; flex-direction: column; }
+        .template-5 .leaflet-header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 30px; border-radius: 15px; }
+        .template-5 .leaflet-header h2, .template-5 .leaflet-header .subtitle { color: white; }
+        .template-6 .leaflet-content { display: grid; grid-template-columns: 1fr 1fr; gap: 30px; }
+        .template-7 .leaflet-container { background: linear-gradient(to bottom, #f8fafc, #ffffff); }
+        .template-8 .leaflet-content h3 { color: #667eea; border-left: 5px solid #667eea; padding-left: 15px; }
+        .template-9 .leaflet-content { max-width: 800px; margin: 0 auto; }
+        .template-10 .leaflet-container { border: 5px solid #667eea; }
+
+        .modal {
+            display: none;
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.7);
+            z-index: 1000;
+            align-items: center;
+            justify-content: center;
+        }
+
+        .modal.show {
+            display: flex;
+        }
+
+        .modal-content {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 600px;
+            width: 90%;
+            max-height: 80vh;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 20px;
+        }
+
+        .modal-header h3 {
+            font-size: 1.8rem;
+            color: #1f2937;
+        }
+
+        .close-modal {
+            background: none;
+            border: none;
+            font-size: 2rem;
+            cursor: pointer;
+            color: #9ca3af;
+        }
+
+        .close-modal:hover {
+            color: #374151;
+        }
+
+        @media print {
+            body {
+                background: white;
+                padding: 0;
+            }
+            .glass-card:not(.leaflet-output) {
+                display: none;
+            }
+            .action-buttons {
+                display: none;
+            }
+        }
+
+        @media (max-width: 768px) {
+            .header h1 {
+                font-size: 2rem;
+            }
+            .template-1 .leaflet-content,
+            .template-2 .leaflet-content {
+                column-count: 1;
+            }
+            .template-3 .leaflet-content,
+            .template-6 .leaflet-content {
+                grid-template-columns: 1fr;
+            }
         }
     </style>
 </head>
-<body class="bg-blue-50 text-gray-800">
-
-    <div class="container mx-auto p-4 md:p-8">
-        
-        <header id="header-title" class="text-center mb-8">
-            <div class="flex justify-center items-center gap-3 text-sky-700">
-                <div id="header-icon-container" class="w-10 h-10 flex items-center justify-center"></div>
-                <h1 class="text-3xl md:text-4xl font-bold text-sky-800">نشاط الرعاية الصحية الأولية</h1>
-            </div>
-            <p class="text-lg text-gray-600 mt-2">مولد المطويات الصحية لطلاب السنة الثالثة</p>
-        </header>
-
-        <!-- Appwrite Configuration Section -->
-        <main id="appwrite-config" class="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto mb-8">
-            <h2 class="text-2xl font-bold mb-4 text-sky-800">⚙️ إعدادات Appwrite</h2>
-            <div class="mb-4">
-                <label for="appwriteEndpoint" class="block text-lg font-semibold mb-2 text-gray-700">Endpoint:</label>
-                <input type="text" id="appwriteEndpoint" placeholder="https://cloud.appwrite.io/v1" 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500"
-                       value="https://cloud.appwrite.io/v1">
-            </div>
-            <div class="mb-4">
-                <label for="appwriteProject" class="block text-lg font-semibold mb-2 text-gray-700">Project ID:</label>
-                <input type="text" id="appwriteProject" placeholder="أدخل معرف المشروع" 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
-            </div>
-            <div class="mb-4">
-                <label for="appwriteDatabase" class="block text-lg font-semibold mb-2 text-gray-700">Database ID:</label>
-                <input type="text" id="appwriteDatabase" placeholder="أدخل معرف قاعدة البيانات" 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
-            </div>
-            <div class="mb-4">
-                <label for="appwriteCollection" class="block text-lg font-semibold mb-2 text-gray-700">Collection ID:</label>
-                <input type="text" id="appwriteCollection" placeholder="أدخل معرف المجموعة" 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
-            </div>
-            <button id="saveConfigBtn" class="w-full bg-green-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-green-700 transition duration-300">
-                💾 حفظ الإعدادات
-            </button>
-            <div id="config-message" class="mt-4"></div>
-        </main>
-
-        <!-- Student Input Section -->
-        <main id="controls" class="bg-white p-6 rounded-lg shadow-md max-w-2xl mx-auto mb-8">
-            <div class="mb-4">
-                <label for="serialNumber" class="block text-lg font-semibold mb-2 text-gray-700">الرجاء إدخال الرقم التسلسلي:</label>
-                <input type="number" id="serialNumber" placeholder="مثال: 145" 
-                       class="w-full px-4 py-2 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-sky-500">
-            </div>
-            <button id="generateButton" class="w-full bg-sky-600 text-white font-bold py-3 px-4 rounded-lg hover:bg-sky-700 transition duration-300 flex items-center justify-center disabled:bg-sky-400">
-                <span id="button-text">توليد المطوية</span>
-                <svg id="button-spinner" class="animate-spin mr-3 h-5 w-5 text-white hidden" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                </svg>
-            </button>
-            <div id="error-message" class="text-red-500 mt-4 text-center font-semibold"></div>
-        </main>
-        
-        <!-- Leaflet Output -->
-        <div id="leafletOutput" class="hidden"></div>
-
-        <!-- Theme Selector -->
-        <div id="theme-selector-container" class="max-w-7xl mx-auto mt-8 bg-white p-6 rounded-lg shadow-md hidden">
-            <h2 class="text-2xl font-bold text-center text-sky-800 mb-4">اختر المظهر</h2>
-            <div id="theme-selector" class="grid grid-cols-5 sm:grid-cols-10 gap-4 justify-center"></div>
+<body>
+    <div class="container">
+        <!-- Header -->
+        <div class="header">
+            <h1><i class="fas fa-notes-medical"></i> PHC Leaflet Generator</h1>
+            <p>AI-Powered Health Education Leaflets for BSNU 3rd Year Students</p>
         </div>
 
-        <!-- Print Controls -->
-        <div id="print-controls" class="text-center mt-6 hidden">
-            <button id="saveToAppwriteBtn" class="bg-green-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-green-700 transition duration-300 ml-2">
-                💾 حفظ في Appwrite
+        <!-- Configuration Section -->
+        <div class="glass-card">
+            <h2 style="font-size: 1.8rem; margin-bottom: 20px; color: #1f2937;">
+                <i class="fas fa-cog"></i> Configuration
+            </h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <div class="input-group">
+                    <label><i class="fas fa-key"></i> Gemini API Key</label>
+                    <input type="password" id="geminiApiKey" placeholder="Enter your Gemini API key">
+                    <small style="color: #6b7280; margin-top: 5px; display: block;">Get your API key from <a href="https://makersuite.google.com/app/apikey" target="_blank" style="color: #667eea;">Google AI Studio</a></small>
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fas fa-database"></i> Appwrite Endpoint</label>
+                    <input type="text" id="appwriteEndpoint" placeholder="https://cloud.appwrite.io/v1" value="https://cloud.appwrite.io/v1">
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fas fa-project-diagram"></i> Appwrite Project ID</label>
+                    <input type="text" id="appwriteProject" placeholder="Your project ID">
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fas fa-database"></i> Database ID</label>
+                    <input type="text" id="appwriteDatabase" placeholder="Your database ID">
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fas fa-folder"></i> Collection ID</label>
+                    <input type="text" id="appwriteCollection" placeholder="Your collection ID">
+                </div>
+            </div>
+
+            <button class="btn btn-secondary" onclick="saveConfiguration()" style="margin-top: 20px;">
+                <i class="fas fa-save"></i> Save Configuration
             </button>
-            <button id="regenerateContentBtn" class="bg-gray-700 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-800 transition duration-300 ml-2">
-                🔄 إعادة توليد المحتوى
+            <div id="config-message"></div>
+        </div>
+
+        <!-- Student Input Section -->
+        <div class="glass-card">
+            <h2 style="font-size: 1.8rem; margin-bottom: 20px; color: #1f2937;">
+                <i class="fas fa-user-graduate"></i> Student Information
+            </h2>
+            
+            <div style="display: grid; grid-template-columns: repeat(auto-fit, minmax(300px, 1fr)); gap: 20px;">
+                <div class="input-group">
+                    <label><i class="fas fa-hashtag"></i> Student Serial Number (1-644)</label>
+                    <input type="number" id="studentSerial" min="1" max="644" placeholder="Enter serial number" onchange="loadStudentInfo()">
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fas fa-user"></i> Student Name</label>
+                    <input type="text" id="studentName" placeholder="Auto-filled from database" readonly>
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fas fa-chair"></i> Seat Number</label>
+                    <input type="text" id="seatNumber" placeholder="Auto-filled" readonly>
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fas fa-users"></i> Group Number</label>
+                    <input type="text" id="groupNumber" placeholder="Auto-filled" readonly>
+                </div>
+
+                <div class="input-group">
+                    <label><i class="fas fa-book-medical"></i> Assigned Topic</label>
+                    <input type="text" id="topicTitle" placeholder="Auto-filled based on group" readonly>
+                </div>
+            </div>
+        </div>
+
+        <!-- Template Selection -->
+        <div class="glass-card">
+            <h2 style="font-size: 1.8rem; margin-bottom: 10px; color: #1f2937;">
+                <i class="fas fa-palette"></i> Choose Leaflet Template
+            </h2>
+            <p style="color: #6b7280; margin-bottom: 20px;">Select from 10 professional designs</p>
+            
+            <div class="template-grid">
+                <div class="template-card active" data-template="1" onclick="selectTemplate(1)">
+                    <div class="template-preview"><i class="fas fa-columns"></i></div>
+                    <h3 style="font-weight: 600; color: #374151;">Three Column</h3>
+                    <p style="color: #6b7280; font-size: 0.9rem;">Classic tri-fold layout</p>
+                </div>
+
+                <div class="template-card" data-template="2" onclick="selectTemplate(2)">
+                    <div class="template-preview"><i class="fas fa-th-large"></i></div>
+                    <h3 style="font-weight: 600; color: #374151;">Two Column</h3>
+                    <p style="color: #6b7280; font-size: 0.9rem;">Balanced dual layout</p>
+                </div>
+
+                <div class="template-card" data-template="3" onclick="selectTemplate(3)">
+                    <div class="template-preview"><i class="fas fa-layer-group"></i></div>
+                    <h3 style="font-weight: 600; color: #374151;">Sidebar Focus</h3>
+                    <p style="color: #6b7280; font-size: 0.9rem;">Main content + sidebar</p>
+                </div>
+
+                <div class="template-card" data-template="4" onclick="selectTemplate(4)">
+                    <div class="template-preview"><i class="fas fa-stream"></i></div>
+                    <h3 style="font-weight: 600; color: #374151;">Sequential Flow</h3>
+                    <p style="color: #6b7280; font-size: 0.9rem;">Top-to-bottom story</p>
+                </div>
+
+                <div class="template-card" data-template="5" onclick="selectTemplate(5)">
+                    <div class="template-preview"><i class="fas fa-paint-brush"></i></div>
+                    <h3 style="font-weight: 600; color: #374151;">Gradient Header</h3>
+                    <p style="color: #6b7280; font-size: 0.9rem;">Bold colorful header</p>
+                </div>
+
+                <div class="template-card" data-template="6" onclick="selectTemplate(6)">
+                    <div class="template-preview"><i class="fas fa-grip-horizontal"></i></div>
+                    <h3 style="font-weight: 600; color: #374151;">Split View</h3>
+                    <p style="color: #6b7280; font-size: 0.9rem;">Equal two-part design</p>
+                </div>
+
+                <div class="template-card" data-template="7" onclick="selectTemplate(7)">
+                    <div class="template-preview"><i class="fas fa-mountain"></i></div>
+                    <h3 style="font-weight: 600; color: #374151;">Soft Gradient</h3>
+                    <p style="color: #6b7280; font-size: 0.9rem;">Gentle background fade</p>
+                </div>
+
+                <div class="template-card" data-template="8" onclick="selectTemplate(8)">
+                    <div class="template-preview"><i class="fas fa-bars"></i></div>
+                    <h3 style="font-weight: 600; color: #374151;">Accent Borders</h3>
+                    <p style="color: #6b7280; font-size: 0.9rem;">Colored section markers</p>
+                </div>
+
+                <div class="template-card" data-template="9" onclick="selectTemplate(9)">
+                    <div class="template-preview"><i class="fas fa-file-alt"></i></div>
+                    <h3 style="font-weight: 600; color: #374151;">Centered Classic</h3>
+                    <p style="color: #6b7280; font-size: 0.9rem;">Traditional centered</p>
+                </div>
+
+                <div class="template-card" data-template="10" onclick="selectTemplate(10)">
+                    <div class="template-preview"><i class="fas fa-border-style"></i></div>
+                    <h3 style="font-weight: 600; color: #374151;">Bold Frame</h3>
+                    <p style="color: #6b7280; font-size: 0.9rem;">Thick border design</p>
+                </div>
+            </div>
+        </div>
+
+        <!-- Generate Button -->
+        <div class="glass-card" style="text-align: center;">
+            <button class="btn btn-primary" onclick="generateLeaflet()" id="generateBtn" style="font-size: 1.2rem; padding: 18px 48px;">
+                <i class="fas fa-magic"></i>
+                <span id="generate-text">Generate AI-Powered Leaflet</span>
+                <div class="spinner hidden" id="generate-spinner"></div>
             </button>
-            <button id="regenerateImageBtn" class="bg-gray-700 text-white font-bold py-2 px-6 rounded-lg hover:bg-gray-800 transition duration-300 ml-2">
-                🖼️ إعادة توليد الصورة
-            </button>
-            <button onclick="window.print()" class="bg-sky-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-sky-700 transition duration-300 ml-2">
-                🖨️ طباعة
-            </button>
-            <button id="downloadPdfBtn" class="bg-red-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-red-700 transition duration-300">
-                📥 تحميل كـ PDF
-            </button>
+            <div id="error-message" class="alert alert-error hidden" style="margin-top: 20px; justify-content: center;">
+                <i class="fas fa-exclamation-circle"></i>
+                <span id="error-text"></span>
+            </div>
+        </div>
+
+        <!-- Leaflet Output -->
+        <div class="glass-card leaflet-output" id="leafletOutput">
+            <div class="leaflet-container" id="leafletContainer">
+                <!-- Leaflet content will be generated here -->
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="action-buttons">
+                <button class="btn btn-info" onclick="regenerateContent()">
+                    <i class="fas fa-sync-alt"></i> Regenerate Content
+                </button>
+                <button class="btn btn-info" onclick="regenerateImage()">
+                    <i class="fas fa-image"></i> Regenerate Image
+                </button>
+                <button class="btn btn-info" onclick="showFocusOptions()">
+                    <i class="fas fa-bullseye"></i> Focus on Specific Points
+                </button>
+                <button class="btn btn-secondary" onclick="downloadPDF()">
+                    <i class="fas fa-file-pdf"></i> Download PDF
+                </button>
+                <button class="btn btn-secondary" onclick="saveToAppwrite()">
+                    <i class="fas fa-cloud-upload-alt"></i> Save to Appwrite
+                </button>
+            </div>
+
             <div id="save-message"></div>
         </div>
 
-        <!-- AI Tools -->
-        <div id="ai-tools-container" class="max-w-7xl mx-auto mt-8 bg-white p-6 rounded-lg shadow-md hidden">
-            <div class="flex justify-center items-center gap-3 text-sky-600 mb-4">
-                <div id="ai-tools-icon-container" class="w-8 h-8 flex items-center justify-center"></div>
-                <h2 class="text-2xl font-bold text-center text-sky-800">✨ أدوات الذكاء الاصطناعي</h2>
-            </div>
-            <div class="flex flex-wrap justify-center gap-4">
-                <button id="simplifyContentBtn" class="bg-teal-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-teal-700 transition duration-300">
-                    تبسيط المحتوى
-                </button>
-                <button id="generatePointsBtn" class="bg-teal-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-teal-700 transition duration-300">
-                    توليد نقاط رئيسية
-                </button>
-                <button id="listenBtn" class="bg-teal-600 text-white font-bold py-2 px-6 rounded-lg hover:bg-teal-700 transition duration-300 flex items-center justify-center">
-                    <span id="listen-btn-text">الاستماع للمطوية</span>
-                    <div id="listen-spinner" class="mr-2 border-t-transparent border-solid rounded-full border-white spinner-sm hidden"></div>
-                </button>
-            </div>
-        </div>
-
-        <!-- Saved Leaflets -->
-        <div id="saved-leaflets" class="max-w-7xl mx-auto mt-8 bg-white p-6 rounded-lg shadow-md hidden">
-            <h2 class="text-2xl font-bold text-center text-sky-800 mb-4">📚 المطويات المحفوظة</h2>
-            <button id="loadSavedBtn" class="w-full bg-blue-600 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-700 transition duration-300 mb-4">
-                تحميل المطويات المحفوظة
+        <!-- Saved Leaflets Section -->
+        <div class="glass-card hidden" id="savedLeafletsSection">
+            <h2 style="font-size: 1.8rem; margin-bottom: 20px; color: #1f2937;">
+                <i class="fas fa-folder-open"></i> Saved Leaflets
+            </h2>
+            <button class="btn btn-info" onclick="loadSavedLeaflets()" style="margin-bottom: 20px;">
+                <i class="fas fa-sync-alt"></i> Load Saved Leaflets
             </button>
-            <div id="saved-list" class="space-y-2"></div>
-        </div>
-        
-        <footer id="footer-note" class="text-center text-sm text-gray-500 mt-12">
-            <p class="flex items-center justify-center gap-2">
-                <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="currentColor" class="text-red-400">
-                    <path d="M12 21.35l-1.45-1.32C5.4 15.36 2 12.28 2 8.5 2 5.42 4.42 3 7.5 3c1.74 0 3.41.81 4.5 2.09C13.09 3.81 14.76 3 16.5 3 19.58 3 22 5.42 22 8.5c0 3.78-3.4 6.86-8.55 11.54L12 21.35z"/>
-                </svg>
-                <span>مصمم لجامعة بني سويف الأهلية - كلية الطب</span>
-            </p>
-            <p>ملاحظة: المحتوى العلمي هو نموذج ويجب مراجعته والتحقق منه.</p>
-        </footer>
-    </div>
-    
-    <!-- AI Modal -->
-    <div id="ai-modal" class="modal-overlay hidden">
-        <div class="modal-content">
-            <div class="flex justify-between items-center mb-4">
-                <h3 id="modal-title" class="text-xl font-bold text-gray-800">نتيجة الذكاء الاصطناعي</h3>
-                <button id="close-modal-btn" class="text-gray-500 hover:text-gray-800 text-2xl">&times;</button>
-            </div>
-            <div id="modal-body" class="text-gray-700"></div>
+            <div id="saved-leaflets-list"></div>
         </div>
     </div>
 
-    <script src="app.js"></script>
+    <!-- Focus Options Modal -->
+    <div class="modal" id="focusModal">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h3><i class="fas fa-bullseye"></i> Focus on Specific Points</h3>
+                <button class="close-modal" onclick="closeFocusModal()">&times;</button>
+            </div>
+            <div class="input-group">
+                <label>Specify what aspects to emphasize:</label>
+                <textarea id="focusInput" rows="6" placeholder="E.g., 'Focus more on prevention strategies and practical tips for daily life. Include more statistics about effectiveness.'"></textarea>
+            </div>
+            <button class="btn btn-primary" onclick="regenerateWithFocus()" style="width: 100%; margin-top: 15px;">
+                <i class="fas fa-check"></i> Apply and Regenerate
+            </button>
+        </div>
+    </div>
+
+    <!-- Load student data -->
+    <script src="students-data.js"></script>
+    
+    <!-- Pre-configured settings -->
+    <script src="config-preset.js"></script>
+    
+    <!-- Main Application Script -->
+    <script src="main-app.js"></script>
 </body>
 </html>
-
 

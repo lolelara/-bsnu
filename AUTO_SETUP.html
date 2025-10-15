@@ -1,0 +1,346 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Auto Setup - PHC Leaflet Generator</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/appwrite@13.0.1"></script>
+    
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+        }
+        .card {
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            max-width: 800px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+        }
+        .status {
+            padding: 20px;
+            border-radius: 10px;
+            margin: 15px 0;
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        .status-pending {
+            background: #fef3c7;
+            color: #92400e;
+        }
+        .status-running {
+            background: #dbeafe;
+            color: #1e40af;
+        }
+        .status-success {
+            background: #d1fae5;
+            color: #065f46;
+        }
+        .status-error {
+            background: #fee2e2;
+            color: #991b1b;
+        }
+        .spinner {
+            width: 24px;
+            height: 24px;
+            border: 3px solid rgba(0, 0, 0, 0.1);
+            border-top-color: currentColor;
+            border-radius: 50%;
+            animation: spin 0.8s linear infinite;
+        }
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+        .config-box {
+            background: #1f2937;
+            color: #10b981;
+            padding: 20px;
+            border-radius: 10px;
+            font-family: 'Courier New', monospace;
+            margin: 20px 0;
+            display: none;
+        }
+        .config-box.show {
+            display: block;
+        }
+        .config-item {
+            margin: 10px 0;
+            padding: 8px;
+            background: rgba(16, 185, 129, 0.1);
+            border-radius: 5px;
+        }
+        .btn {
+            padding: 15px 30px;
+            border-radius: 10px;
+            border: none;
+            font-weight: 600;
+            cursor: pointer;
+            display: inline-flex;
+            align-items: center;
+            gap: 10px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            transition: all 0.3s;
+        }
+        .btn:hover:not(:disabled) {
+            transform: translateY(-2px);
+            box-shadow: 0 10px 25px rgba(102, 126, 234, 0.4);
+        }
+        .btn:disabled {
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+    </style>
+</head>
+<body>
+    <div class="card">
+        <div style="text-align: center; margin-bottom: 30px;">
+            <h1 style="font-size: 2.5rem; color: #1f2937; margin-bottom: 10px;">
+                <i class="fas fa-robot"></i> Automatic Setup
+            </h1>
+            <p style="color: #6b7280;">Setting up your PHC Leaflet Generator database...</p>
+        </div>
+
+        <div id="step1" class="status status-pending">
+            <div class="spinner"></div>
+            <div>
+                <strong>Step 1:</strong> Connecting to Appwrite...
+            </div>
+        </div>
+
+        <div id="step2" class="status status-pending">
+            <i class="fas fa-clock"></i>
+            <div>
+                <strong>Step 2:</strong> Creating database...
+            </div>
+        </div>
+
+        <div id="step3" class="status status-pending">
+            <i class="fas fa-clock"></i>
+            <div>
+                <strong>Step 3:</strong> Creating collection...
+            </div>
+        </div>
+
+        <div id="step4" class="status status-pending">
+            <i class="fas fa-clock"></i>
+            <div>
+                <strong>Step 4:</strong> Setting up attributes...
+            </div>
+        </div>
+
+        <div class="config-box" id="configOutput">
+            <div style="text-align: center; margin-bottom: 15px;">
+                <strong style="color: white; font-size: 1.2rem;">🎉 Setup Complete!</strong>
+            </div>
+            <div id="configDetails"></div>
+            <div style="margin-top: 20px; padding: 15px; background: rgba(59, 130, 246, 0.2); border-radius: 8px;">
+                <p style="color: #93c5fd; font-weight: bold; margin-bottom: 10px;">Next Steps:</p>
+                <ol style="color: #93c5fd; margin-left: 20px;">
+                    <li>Copy the IDs below</li>
+                    <li>Update config-preset.js with these IDs</li>
+                    <li>Open index.html to start generating leaflets</li>
+                </ol>
+            </div>
+        </div>
+
+        <div style="text-align: center; margin-top: 30px;">
+            <button class="btn" onclick="location.href='index.html'" id="launchBtn" style="display: none;">
+                <i class="fas fa-rocket"></i> Launch Application
+            </button>
+            <button class="btn" onclick="startAutoSetup()" id="retryBtn" style="display: none;">
+                <i class="fas fa-redo"></i> Retry Setup
+            </button>
+        </div>
+    </div>
+
+    <script>
+        const CONFIG = {
+            endpoint: 'https://cloud.appwrite.io/v1',
+            projectId: '68eeea7c0008fe656dc0',
+            apiKey: 'standard_4254c26eb3d99887769c3de02274c654696968aa2bad1f354ed00e968b945cc17e299bc1f554752812c6d00606ea45975d8b6c2d8be796cb9ce69da37214fbaa87373343a9d899432f28d72b20de3aa7f007121b78e9b0dfc911023570f0db22f9fbd5f0b3fbd29d74007429c4f99888509b5eeaf9e75e9eb2230f9d23998c2c'
+        };
+
+        let databaseId = null;
+        let collectionId = null;
+
+        function updateStatus(stepId, status, icon, text) {
+            const step = document.getElementById(stepId);
+            step.className = `status status-${status}`;
+            
+            let iconHTML = '';
+            if (status === 'running') {
+                iconHTML = '<div class="spinner"></div>';
+            } else if (status === 'success') {
+                iconHTML = '<i class="fas fa-check-circle" style="font-size: 24px;"></i>';
+            } else if (status === 'error') {
+                iconHTML = '<i class="fas fa-times-circle" style="font-size: 24px;"></i>';
+            }
+            
+            const originalText = step.querySelector('div').innerHTML;
+            const stepText = originalText.split(':')[0] + ':';
+            step.innerHTML = iconHTML + '<div><strong>' + stepText + '</strong> ' + text + '</div>';
+        }
+
+        async function startAutoSetup() {
+            try {
+                // Step 1: Connect
+                updateStatus('step1', 'running', '', 'Connecting to Appwrite...');
+                
+                const { Client, Databases, ID, Permission, Role } = Appwrite;
+                const client = new Client()
+                    .setEndpoint(CONFIG.endpoint)
+                    .setProject(CONFIG.projectId)
+                    .setKey(CONFIG.apiKey);
+                
+                const databases = new Databases(client);
+                
+                await new Promise(resolve => setTimeout(resolve, 1000));
+                updateStatus('step1', 'success', '', 'Connected successfully!');
+
+                // Step 2: Create Database
+                updateStatus('step2', 'running', '', 'Creating database...');
+                try {
+                    const db = await databases.create(ID.unique(), 'leaflets_db');
+                    databaseId = db.$id;
+                    updateStatus('step2', 'success', '', `Database created: ${databaseId}`);
+                } catch (error) {
+                    if (error.code === 409) {
+                        const dbList = await databases.list();
+                        const existing = dbList.databases.find(d => d.name === 'leaflets_db');
+                        if (existing) {
+                            databaseId = existing.$id;
+                            updateStatus('step2', 'success', '', `Using existing database: ${databaseId}`);
+                        } else {
+                            throw new Error('Database creation failed');
+                        }
+                    } else {
+                        throw error;
+                    }
+                }
+
+                // Step 3: Create Collection
+                updateStatus('step3', 'running', '', 'Creating collection...');
+                try {
+                    const coll = await databases.createCollection(
+                        databaseId,
+                        ID.unique(),
+                        'leaflets',
+                        [
+                            Permission.read(Role.any()),
+                            Permission.create(Role.any()),
+                            Permission.update(Role.any()),
+                            Permission.delete(Role.any())
+                        ]
+                    );
+                    collectionId = coll.$id;
+                    updateStatus('step3', 'success', '', `Collection created: ${collectionId}`);
+                } catch (error) {
+                    if (error.code === 409) {
+                        const collList = await databases.listCollections(databaseId);
+                        const existing = collList.collections.find(c => c.name === 'leaflets');
+                        if (existing) {
+                            collectionId = existing.$id;
+                            updateStatus('step3', 'success', '', `Using existing collection: ${collectionId}`);
+                        } else {
+                            throw new Error('Collection creation failed');
+                        }
+                    } else {
+                        throw error;
+                    }
+                }
+
+                // Step 4: Create Attributes
+                updateStatus('step4', 'running', '', 'Creating attributes (this may take 30 seconds)...');
+                
+                const attributes = [
+                    { key: 'studentSerial', type: 'integer', required: true },
+                    { key: 'studentName', type: 'string', size: 255, required: true },
+                    { key: 'studentSeatNo', type: 'string', size: 50, required: true },
+                    { key: 'studentGroup', type: 'integer', required: true },
+                    { key: 'topicTitle', type: 'string', size: 255, required: true },
+                    { key: 'topicSubtitle', type: 'string', size: 255, required: true },
+                    { key: 'content', type: 'string', size: 65535, required: true },
+                    { key: 'imageUrl', type: 'string', size: 2048, required: false },
+                    { key: 'templateNumber', type: 'integer', required: true },
+                    { key: 'generatedAt', type: 'string', size: 50, required: true }
+                ];
+
+                let created = 0;
+                for (const attr of attributes) {
+                    try {
+                        if (attr.type === 'integer') {
+                            await databases.createIntegerAttribute(databaseId, collectionId, attr.key, attr.required);
+                        } else {
+                            await databases.createStringAttribute(databaseId, collectionId, attr.key, attr.size, attr.required);
+                        }
+                        created++;
+                        updateStatus('step4', 'running', '', `Creating attributes (${created}/${attributes.length})...`);
+                        await new Promise(resolve => setTimeout(resolve, 500));
+                    } catch (error) {
+                        if (error.code !== 409) {
+                            console.warn(`Attribute ${attr.key} error:`, error);
+                        }
+                    }
+                }
+
+                updateStatus('step4', 'success', '', 'All attributes created successfully!');
+
+                // Show configuration
+                showConfiguration();
+
+            } catch (error) {
+                console.error('Setup error:', error);
+                const errorStep = error.message.includes('Database') ? 'step2' : 
+                                error.message.includes('Collection') ? 'step3' : 'step4';
+                updateStatus(errorStep, 'error', '', error.message);
+                document.getElementById('retryBtn').style.display = 'inline-flex';
+            }
+        }
+
+        function showConfiguration() {
+            const output = document.getElementById('configOutput');
+            const details = document.getElementById('configDetails');
+            
+            details.innerHTML = `
+                <div class="config-item">
+                    <strong>Appwrite Endpoint:</strong><br>
+                    ${CONFIG.endpoint}
+                </div>
+                <div class="config-item">
+                    <strong>Project ID:</strong><br>
+                    ${CONFIG.projectId}
+                </div>
+                <div class="config-item">
+                    <strong>Database ID:</strong><br>
+                    ${databaseId}
+                </div>
+                <div class="config-item">
+                    <strong>Collection ID:</strong><br>
+                    ${collectionId}
+                </div>
+                <div class="config-item" style="background: rgba(239, 68, 68, 0.1); border: 1px dashed #ef4444;">
+                    <strong style="color: #fca5a5;">⚠️ Important:</strong><br>
+                    <span style="color: #fca5a5;">Copy these IDs and update config-preset.js before using the application!</span>
+                </div>
+            `;
+            
+            output.classList.add('show');
+            document.getElementById('launchBtn').style.display = 'inline-flex';
+        }
+
+        // Auto-start on page load
+        window.addEventListener('DOMContentLoaded', startAutoSetup);
+    </script>
+</body>
+</html>
+
