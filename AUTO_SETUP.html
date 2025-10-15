@@ -191,31 +191,53 @@
             step.innerHTML = iconHTML + '<div><strong>' + stepText + '</strong> ' + text + '</div>';
         }
 
+        // Helper function for API calls with API key
+        async function apiCall(endpoint, method = 'GET', body = null) {
+            const headers = {
+                'Content-Type': 'application/json',
+                'X-Appwrite-Project': CONFIG.projectId,
+                'X-Appwrite-Key': CONFIG.apiKey
+            };
+            
+            const options = { method, headers };
+            if (body) options.body = JSON.stringify(body);
+            
+            const response = await fetch(`${CONFIG.endpoint}${endpoint}`, options);
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw { code: response.status, message: error.message || 'API Error', type: error.type };
+            }
+            
+            const data = await response.json();
+            return data;
+        }
+        
+        // Generate unique ID
+        function generateUniqueId() {
+            return 'unique_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
         async function startAutoSetup() {
             try {
                 // Step 1: Connect
                 updateStatus('step1', 'running', '', 'Connecting to Appwrite...');
-                
-                const { Client, Databases, ID, Permission, Role } = Appwrite;
-                const client = new Client()
-                    .setEndpoint(CONFIG.endpoint)
-                    .setProject(CONFIG.projectId)
-                    .setKey(CONFIG.apiKey);
-                
-                const databases = new Databases(client);
-                
-                await new Promise(resolve => setTimeout(resolve, 1000));
+                await new Promise(resolve => setTimeout(resolve, 500));
                 updateStatus('step1', 'success', '', 'Connected successfully!');
 
                 // Step 2: Create Database
                 updateStatus('step2', 'running', '', 'Creating database...');
                 try {
-                    const db = await databases.create(ID.unique(), 'leaflets_db');
+                    const dbId = generateUniqueId();
+                    const db = await apiCall('/databases', 'POST', {
+                        databaseId: dbId,
+                        name: 'leaflets_db'
+                    });
                     databaseId = db.$id;
                     updateStatus('step2', 'success', '', `Database created: ${databaseId}`);
                 } catch (error) {
-                    if (error.code === 409) {
-                        const dbList = await databases.list();
+                    if (error.code === 409 || error.type === 'document_already_exists') {
+                        const dbList = await apiCall('/databases');
                         const existing = dbList.databases.find(d => d.name === 'leaflets_db');
                         if (existing) {
                             databaseId = existing.$id;
@@ -231,22 +253,23 @@
                 // Step 3: Create Collection
                 updateStatus('step3', 'running', '', 'Creating collection...');
                 try {
-                    const coll = await databases.createCollection(
-                        databaseId,
-                        ID.unique(),
-                        'leaflets',
-                        [
-                            Permission.read(Role.any()),
-                            Permission.create(Role.any()),
-                            Permission.update(Role.any()),
-                            Permission.delete(Role.any())
-                        ]
-                    );
+                    const collId = generateUniqueId();
+                    const coll = await apiCall(`/databases/${databaseId}/collections`, 'POST', {
+                        collectionId: collId,
+                        name: 'leaflets',
+                        permissions: [
+                            'read("any")',
+                            'create("any")',
+                            'update("any")',
+                            'delete("any")'
+                        ],
+                        documentSecurity: false
+                    });
                     collectionId = coll.$id;
                     updateStatus('step3', 'success', '', `Collection created: ${collectionId}`);
                 } catch (error) {
-                    if (error.code === 409) {
-                        const collList = await databases.listCollections(databaseId);
+                    if (error.code === 409 || error.type === 'document_already_exists') {
+                        const collList = await apiCall(`/databases/${databaseId}/collections`);
                         const existing = collList.collections.find(c => c.name === 'leaflets');
                         if (existing) {
                             collectionId = existing.$id;
@@ -278,11 +301,17 @@
                 let created = 0;
                 for (const attr of attributes) {
                     try {
-                        if (attr.type === 'integer') {
-                            await databases.createIntegerAttribute(databaseId, collectionId, attr.key, attr.required);
-                        } else {
-                            await databases.createStringAttribute(databaseId, collectionId, attr.key, attr.size, attr.required);
+                        const endpoint = `/databases/${databaseId}/collections/${collectionId}/attributes/${attr.type}`;
+                        const body = {
+                            key: attr.key,
+                            required: attr.required
+                        };
+                        
+                        if (attr.type === 'string') {
+                            body.size = attr.size;
                         }
+                        
+                        await apiCall(endpoint, 'POST', body);
                         created++;
                         updateStatus('step4', 'running', '', `Creating attributes (${created}/${attributes.length})...`);
                         await new Promise(resolve => setTimeout(resolve, 500));
@@ -290,6 +319,7 @@
                         if (error.code !== 409) {
                             console.warn(`Attribute ${attr.key} error:`, error);
                         }
+                        created++;
                     }
                 }
 

@@ -236,6 +236,33 @@
             logArea.scrollTop = logArea.scrollHeight;
         }
 
+        // Helper function for API calls with API key
+        async function apiCall(endpoint, projectId, apiKey, path, method = 'GET', body = null) {
+            const headers = {
+                'Content-Type': 'application/json',
+                'X-Appwrite-Project': projectId,
+                'X-Appwrite-Key': apiKey
+            };
+            
+            const options = { method, headers };
+            if (body) options.body = JSON.stringify(body);
+            
+            const response = await fetch(`${endpoint}${path}`, options);
+            
+            if (!response.ok) {
+                const error = await response.json();
+                throw { code: response.status, message: error.message || 'API Error', type: error.type };
+            }
+            
+            const data = await response.json();
+            return data;
+        }
+        
+        // Generate unique ID
+        function generateUniqueId() {
+            return 'unique_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        }
+
         async function startSetup() {
             const endpoint = document.getElementById('endpoint').value.trim();
             const apiKey = document.getElementById('apiKey').value.trim();
@@ -254,30 +281,24 @@
             document.getElementById('configDisplay').classList.remove('show');
 
             try {
-                log('Initializing Appwrite SDK...', 'info');
-                
-                const { Client, Databases, ID, Permission, Role } = Appwrite;
-                client = new Client()
-                    .setEndpoint(endpoint)
-                    .setProject(projectId)
-                    .setKey(apiKey);
-                
-                databases = new Databases(client);
-                log('✓ Appwrite SDK initialized', 'success');
+                log('Connecting to Appwrite...', 'info');
+                await new Promise(resolve => setTimeout(resolve, 500));
+                log('✓ Connected successfully', 'success');
 
                 // Create Database
                 log('Creating database "leaflets_db"...', 'info');
                 try {
-                    const database = await databases.create(
-                        ID.unique(),
-                        'leaflets_db'
-                    );
+                    const dbId = generateUniqueId();
+                    const database = await apiCall(endpoint, projectId, apiKey, '/databases', 'POST', {
+                        databaseId: dbId,
+                        name: 'leaflets_db'
+                    });
                     setupState.databaseId = database.$id;
                     log(`✓ Database created: ${database.$id}`, 'success');
                 } catch (error) {
-                    if (error.code === 409) {
+                    if (error.code === 409 || error.type === 'document_already_exists') {
                         log('Database already exists, using existing one...', 'warning');
-                        const dbList = await databases.list();
+                        const dbList = await apiCall(endpoint, projectId, apiKey, '/databases');
                         const existing = dbList.databases.find(db => db.name === 'leaflets_db');
                         if (existing) {
                             setupState.databaseId = existing.$id;
@@ -293,23 +314,26 @@
                 // Create Collection
                 log('Creating collection "leaflets"...', 'info');
                 try {
-                    const collection = await databases.createCollection(
-                        setupState.databaseId,
-                        ID.unique(),
-                        'leaflets',
-                        [
-                            Permission.read(Role.any()),
-                            Permission.create(Role.any()),
-                            Permission.update(Role.any()),
-                            Permission.delete(Role.any())
-                        ]
-                    );
+                    const collId = generateUniqueId();
+                    const collection = await apiCall(endpoint, projectId, apiKey, 
+                        `/databases/${setupState.databaseId}/collections`, 'POST', {
+                        collectionId: collId,
+                        name: 'leaflets',
+                        permissions: [
+                            'read("any")',
+                            'create("any")',
+                            'update("any")',
+                            'delete("any")'
+                        ],
+                        documentSecurity: false
+                    });
                     setupState.collectionId = collection.$id;
                     log(`✓ Collection created: ${collection.$id}`, 'success');
                 } catch (error) {
-                    if (error.code === 409) {
+                    if (error.code === 409 || error.type === 'document_already_exists') {
                         log('Collection already exists, using existing one...', 'warning');
-                        const collList = await databases.listCollections(setupState.databaseId);
+                        const collList = await apiCall(endpoint, projectId, apiKey, 
+                            `/databases/${setupState.databaseId}/collections`);
                         const existing = collList.collections.find(c => c.name === 'leaflets');
                         if (existing) {
                             setupState.collectionId = existing.$id;
@@ -342,22 +366,17 @@
                     try {
                         log(`  Creating attribute: ${attr.key}...`, 'info');
                         
-                        if (attr.type === 'integer') {
-                            await databases.createIntegerAttribute(
-                                setupState.databaseId,
-                                setupState.collectionId,
-                                attr.key,
-                                attr.required
-                            );
-                        } else if (attr.type === 'string') {
-                            await databases.createStringAttribute(
-                                setupState.databaseId,
-                                setupState.collectionId,
-                                attr.key,
-                                attr.size,
-                                attr.required
-                            );
+                        const attrEndpoint = `/databases/${setupState.databaseId}/collections/${setupState.collectionId}/attributes/${attr.type}`;
+                        const body = {
+                            key: attr.key,
+                            required: attr.required
+                        };
+                        
+                        if (attr.type === 'string') {
+                            body.size = attr.size;
                         }
+                        
+                        await apiCall(endpoint, projectId, apiKey, attrEndpoint, 'POST', body);
                         
                         log(`  ✓ Attribute ${attr.key} created`, 'success');
                         

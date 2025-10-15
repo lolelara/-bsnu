@@ -1,0 +1,30 @@
+{
+  "name": "phc-leaflet-generator",
+  "version": "1.0.0",
+  "description": "AI-Powered Health Education Leaflet Generator for BSNU 3rd Year Medical Students",
+  "main": "index.html",
+  "scripts": {
+    "setup": "node setup-database.js",
+    "start": "node -e \"console.log('\\n✓ Open index.html in your browser to start!\\n')\""
+  },
+  "keywords": [
+    "medical",
+    "education",
+    "health",
+    "leaflet",
+    "PHC",
+    "AI",
+    "gemini",
+    "appwrite"
+  ],
+  "author": "BSNU Medical Students",
+  "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/yourusername/phc-leaflet-generator.git"
+  },
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}
+

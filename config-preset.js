@@ -6,39 +6,37 @@ const presetConfig = {
     appwrite: {
         endpoint: 'https://cloud.appwrite.io/v1',
         projectId: '68eeea7c0008fe656dc0',
-        // Note: Database and Collection IDs will be generated when you run setup-appwrite.html
-        // After running setup, update these values:
-        databaseId: '', // Add your Database ID here after setup
-        collectionId: '' // Add your Collection ID here after setup
+        databaseId: 'unique_1760489195767_fsjxx1sj8',
+        collectionId: 'unique_1760489196568_vxgj9w8yi'
     }
 };
 
-// Auto-load configuration on page load
+// Auto-load and SAVE configuration on page load
 if (typeof window !== 'undefined') {
     window.addEventListener('DOMContentLoaded', function() {
-        // Check if we're on the main application page
-        if (document.getElementById('geminiApiKey')) {
-            // Load preset configuration
-            document.getElementById('geminiApiKey').value = presetConfig.geminiApiKey;
-            document.getElementById('appwriteEndpoint').value = presetConfig.appwrite.endpoint;
-            document.getElementById('appwriteProject').value = presetConfig.appwrite.projectId;
-            
-            if (presetConfig.appwrite.databaseId) {
-                document.getElementById('appwriteDatabase').value = presetConfig.appwrite.databaseId;
+        // Wait a moment for the page to fully load
+        setTimeout(function() {
+            // Check if we're on the main application page
+            if (document.getElementById('geminiApiKey')) {
+                // Load preset configuration into fields
+                document.getElementById('geminiApiKey').value = presetConfig.geminiApiKey;
+                document.getElementById('appwriteEndpoint').value = presetConfig.appwrite.endpoint;
+                document.getElementById('appwriteProject').value = presetConfig.appwrite.projectId;
+                
+                if (presetConfig.appwrite.databaseId) {
+                    document.getElementById('appwriteDatabase').value = presetConfig.appwrite.databaseId;
+                }
+                
+                if (presetConfig.appwrite.collectionId) {
+                    document.getElementById('appwriteCollection').value = presetConfig.appwrite.collectionId;
+                }
+                
+                // Auto-save configuration immediately
+                if (typeof saveConfiguration === 'function') {
+                    saveConfiguration();
+                }
             }
-            
-            if (presetConfig.appwrite.collectionId) {
-                document.getElementById('appwriteCollection').value = presetConfig.appwrite.collectionId;
-            }
-            
-            // Show message
-            const configMessage = document.getElementById('config-message');
-            if (configMessage) {
-                configMessage.className = 'alert alert-info';
-                configMessage.innerHTML = '<i class="fas fa-info-circle"></i> Pre-configured settings loaded. Click "Save Configuration" to apply.';
-                configMessage.classList.remove('hidden');
-            }
-        }
+        }, 500); // Wait 500ms for everything to load
     });
 }
 
